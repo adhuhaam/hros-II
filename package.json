@@ -9,7 +9,6 @@
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.0.0-beta.2",
-        "@vitejs/plugin-laravel": "^1.0",
         "alpinejs": "^3.14.1",
         "autoprefixer": "^10.4.16",
         "axios": "^1.6.4",
