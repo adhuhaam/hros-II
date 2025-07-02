@@ -82,6 +82,7 @@ import { Checkbox } from './ui/checkbox'
 import { toast } from 'sonner@2.0.3'
 import { ThemeToggle } from './ThemeToggle'
 import { ThemeDemo } from './ThemeDemo'
+import { NotificationBadge } from './NotificationBadge'
 
 // Debounce hook for search inputs
 function useDebounce<T>(value: T, delay: number): T {
@@ -151,6 +152,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
+  const [notificationCount, setNotificationCount] = useState(3)
   const [currentView, setCurrentView] = useState<'dashboard' | 'projects' | 'reports' | 'settings' | 'quota-pools' | 'slot-designation' | 'view-candidates' | 'offer-pending' | 'ready-to-submit' | 'collection' | 'tickets' | 'onboarding' | 'employee-register' | 'employee-termination' | 'employee-resignation' | 'employee-missing' | 'employee-retirement' | 'employee-dead' | 'employee-company-change' | 'work-permit-medical' | 'xpat-insurance' | 'work-permit' | 'visa-sticker' | 'disciplinary-letter' | 'disciplinary-fines' | 'role-management' | 'theme-demo' | 'agent-management' | 'slot-assignment' | 'hr-chat' | 'user-management' | 'site-allocation' | 'island-transfer' | 'hr-handbook' | 'staff-leave' | 'leave-balance' | 'email-management' | 'staff-accommodation' | 'staff-contracts' | 'prepaid-card' | 'overtime-management' | 'departures' | 'bank-account-assistance'>('dashboard')
   const [ncrFile, setNcrFile] = useState<File | null>(null)
   const [selectedProject, setSelectedProject] = useState<ConstructionProject | null>(null)
@@ -874,8 +876,9 @@ export function Dashboard({ onLogout }: DashboardProps) {
 
             <div className="flex items-center gap-2">
               <ThemeToggle />
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" className="relative">
                 <Bell className="h-4 w-4" />
+                <NotificationBadge count={notificationCount} />
               </Button>
               
               <DropdownMenu>
