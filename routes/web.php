@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\RecruitmentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -28,10 +30,15 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 // Dashboard Routes (Protected)
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/employees', [DashboardController::class, 'employees'])->name('employees');
     Route::get('/attendance', [DashboardController::class, 'attendance'])->name('attendance');
     Route::get('/reports', [DashboardController::class, 'reports'])->name('reports');
     Route::get('/performance', [DashboardController::class, 'performance'])->name('performance');
+
+    // Employee management
+    Route::resource('employees', EmployeeController::class);
+
+    // Recruitment management
+    Route::resource('recruitment', RecruitmentController::class)->except(['show', 'edit', 'update']);
 });
 
 // API Routes for AJAX calls
