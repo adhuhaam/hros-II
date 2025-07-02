@@ -220,57 +220,24 @@
                 </div>
             </div>
 
+            </div>
             <!-- Quick Actions -->
             <div class="mb-8">
                 <h2 class="text-xl mb-6">Quick Actions</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <button class="p-4 bg-card rounded-2xl border border-border hover:bg-muted/50 transition-all duration-200 hover:scale-105 text-left group">
-                        <div class="flex items-center space-x-3">
-                            <div class="p-2 bg-blue-500 rounded-lg group-hover:scale-110 transition-transform">
-                                <div class="w-5 h-5 text-white" x-html="createLucideIcon('user-check', 'w-5 h-5')"></div>
+                    @foreach($modules as $module)
+                        <a href="{{ route($module['route']) }}" class="p-4 bg-card rounded-2xl border border-border hover:bg-muted/50 transition-all duration-200 hover:scale-105 text-left group">
+                            <div class="flex items-center space-x-3">
+                                <div class="p-2 bg-blue-500 rounded-lg group-hover:scale-110 transition-transform">
+                                    <div class="w-5 h-5 text-white" x-html="createLucideIcon('arrow-right', 'w-5 h-5')"></div>
+                                </div>
+                                <div>
+                                    <div class="font-medium">{{ $module['title'] }}</div>
+                                    <div class="text-sm text-muted-foreground">Open {{ $module['title'] }}</div>
+                                </div>
                             </div>
-                            <div>
-                                <div class="font-medium">Add Employee</div>
-                                <div class="text-sm text-muted-foreground">Register new employee</div>
-                            </div>
-                        </div>
-                    </button>
-
-                    <button class="p-4 bg-card rounded-2xl border border-border hover:bg-muted/50 transition-all duration-200 hover:scale-105 text-left group">
-                        <div class="flex items-center space-x-3">
-                            <div class="p-2 bg-green-500 rounded-lg group-hover:scale-110 transition-transform">
-                                <div class="w-5 h-5 text-white" x-html="createLucideIcon('trending-up', 'w-5 h-5')"></div>
-                            </div>
-                            <div>
-                                <div class="font-medium">Generate Report</div>
-                                <div class="text-sm text-muted-foreground">Create detailed reports</div>
-                            </div>
-                        </div>
-                    </button>
-
-                    <button class="p-4 bg-card rounded-2xl border border-border hover:bg-muted/50 transition-all duration-200 hover:scale-105 text-left group">
-                        <div class="flex items-center space-x-3">
-                            <div class="p-2 bg-purple-500 rounded-lg group-hover:scale-110 transition-transform">
-                                <div class="w-5 h-5 text-white" x-html="createLucideIcon('clock', 'w-5 h-5')"></div>
-                            </div>
-                            <div>
-                                <div class="font-medium">Attendance</div>
-                                <div class="text-sm text-muted-foreground">View attendance records</div>
-                            </div>
-                        </div>
-                    </button>
-
-                    <button class="p-4 bg-card rounded-2xl border border-border hover:bg-muted/50 transition-all duration-200 hover:scale-105 text-left group">
-                        <div class="flex items-center space-x-3">
-                            <div class="p-2 bg-orange-500 rounded-lg group-hover:scale-110 transition-transform">
-                                <div class="w-5 h-5 text-white" x-html="createLucideIcon('award', 'w-5 h-5')"></div>
-                            </div>
-                            <div>
-                                <div class="font-medium">Performance</div>
-                                <div class="text-sm text-muted-foreground">Track performance metrics</div>
-                            </div>
-                        </div>
-                    </button>
+                        </a>
+                    @endforeach
                 </div>
             </div>
 

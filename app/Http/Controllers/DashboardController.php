@@ -14,10 +14,44 @@ class DashboardController extends Controller
     {
         $user = Session::get('user');
         
+        $role = $user['role'] ?? 'employee';
+
+        $modulesByRole = [
+            'super_admin' => [
+                ['title' => 'Recruitment', 'route' => 'recruitment.index'],
+                ['title' => 'Employees', 'route' => 'employees.index'],
+            ],
+            'admin' => [
+                ['title' => 'Recruitment', 'route' => 'recruitment.index'],
+                ['title' => 'Employees', 'route' => 'employees.index'],
+            ],
+            'manager' => [
+                ['title' => 'Employees', 'route' => 'employees.index'],
+            ],
+            'hr_manager' => [
+                ['title' => 'Recruitment', 'route' => 'recruitment.index'],
+                ['title' => 'Employees', 'route' => 'employees.index'],
+            ],
+            'hr_employee' => [
+                ['title' => 'Recruitment', 'route' => 'recruitment.index'],
+                ['title' => 'Employees', 'route' => 'employees.index'],
+            ],
+            'finance_planning' => [
+                ['title' => 'Employees', 'route' => 'employees.index'],
+            ],
+            'reception' => [
+                ['title' => 'Recruitment', 'route' => 'recruitment.index'],
+            ],
+            'employee' => [
+                ['title' => 'Employees', 'route' => 'employees.index'],
+            ],
+        ];
+
         return view('dashboard', [
             'currentPage' => 'dashboard',
             'user' => $user,
-            'stats' => $this->getEmployeeStats()
+            'stats' => $this->getEmployeeStats(),
+            'modules' => $modulesByRole[$role] ?? [],
         ]);
     }
 
@@ -29,16 +63,6 @@ class DashboardController extends Controller
         return response()->json([
             'success' => true,
             'data' => $this->getEmployeeStats()
-        ]);
-    }
-
-    /**
-     * Show employees page
-     */
-    public function employees()
-    {
-        return view('employees', [
-            'currentPage' => 'employees'
         ]);
     }
 
