@@ -24,7 +24,7 @@ import {
   ArrowRightLeft, Building, Stethoscope,
   CreditCard as InsuranceIcon, Globe, Gavel, 
   FileWarning, Receipt, MessageCircle, UserCog, Map,
-  Navigation, Book
+  Navigation, Book, Mail, Home, Bed, Briefcase, Banknote
 } from 'lucide-react'
 import { Logo } from './Logo'
 import { Input } from './ui/input'
@@ -67,6 +67,15 @@ import { Reports } from './Reports'
 import { SiteAllocation } from './SiteAllocation'
 import { IslandTransfer } from './IslandTransfer'
 import { HRHandbook } from './HRHandbook'
+import { StaffLeave } from './StaffLeave'
+import { LeaveBalance } from './LeaveBalance'
+import { EmailManagement } from './EmailManagement'
+import { StaffAccommodation } from './StaffAccommodation'
+import { StaffContracts } from './StaffContracts'
+import { PrepaidCardManagement } from './PrepaidCardManagement'
+import { OvertimeManagement } from './OvertimeManagement'
+import { DepartureManagement } from './DepartureManagement'
+import { BankAccountAssistance } from './BankAccountAssistance'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu'
 import { Checkbox } from './ui/checkbox'
@@ -142,7 +151,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
-  const [currentView, setCurrentView] = useState<'dashboard' | 'projects' | 'analytics' | 'reports' | 'schedule' | 'settings' | 'quota-pools' | 'slot-designation' | 'view-candidates' | 'offer-pending' | 'ready-to-submit' | 'collection' | 'tickets' | 'onboarding' | 'employee-register' | 'employee-termination' | 'employee-resignation' | 'employee-missing' | 'employee-retirement' | 'employee-dead' | 'employee-company-change' | 'work-permit-medical' | 'xpat-insurance' | 'work-permit' | 'visa-sticker' | 'disciplinary-letter' | 'disciplinary-fines' | 'role-management' | 'theme-demo' | 'agent-management' | 'slot-assignment' | 'hr-chat' | 'user-management' | 'site-allocation' | 'island-transfer' | 'hr-handbook'>('dashboard')
+  const [currentView, setCurrentView] = useState<'dashboard' | 'projects' | 'reports' | 'settings' | 'quota-pools' | 'slot-designation' | 'view-candidates' | 'offer-pending' | 'ready-to-submit' | 'collection' | 'tickets' | 'onboarding' | 'employee-register' | 'employee-termination' | 'employee-resignation' | 'employee-missing' | 'employee-retirement' | 'employee-dead' | 'employee-company-change' | 'work-permit-medical' | 'xpat-insurance' | 'work-permit' | 'visa-sticker' | 'disciplinary-letter' | 'disciplinary-fines' | 'role-management' | 'theme-demo' | 'agent-management' | 'slot-assignment' | 'hr-chat' | 'user-management' | 'site-allocation' | 'island-transfer' | 'hr-handbook' | 'staff-leave' | 'leave-balance' | 'email-management' | 'staff-accommodation' | 'staff-contracts' | 'prepaid-card' | 'overtime-management' | 'departures' | 'bank-account-assistance'>('dashboard')
   const [ncrFile, setNcrFile] = useState<File | null>(null)
   const [selectedProject, setSelectedProject] = useState<ConstructionProject | null>(null)
   const [projectDetailsOpen, setProjectDetailsOpen] = useState(false)
@@ -304,13 +313,37 @@ export function Dashboard({ onLogout }: DashboardProps) {
     }
   ], [])
 
-  // Updated menu items with HR Handbook
+  // Updated menu items with Bank Account Assistance
   const menuItems = useMemo(() => [
     { icon: LayoutDashboard, label: 'Dashboard', key: 'dashboard' as const },
     { icon: MessageCircle, label: 'HR Team Chat', key: 'hr-chat' as const },
     { icon: FolderOpen, label: 'Projects', key: 'projects' as const },
-    { icon: Map, label: 'Site Allocation', key: 'site-allocation' as const },
+    { 
+      icon: Map, 
+      label: 'Site Management', 
+      key: 'site-management' as const,
+      subItems: [
+        { icon: Building2, label: 'Site Allocation', key: 'site-allocation' as const },
+        { icon: Navigation, label: 'Island Transfer', key: 'island-transfer' as const }
+      ]
+    },
     { icon: Book, label: 'HR Handbook', key: 'hr-handbook' as const },
+    { icon: Mail, label: 'Emails', key: 'email-management' as const },
+    { icon: CreditCard, label: 'Prepaid Card Management', key: 'prepaid-card' as const },
+    { icon: Timer, label: 'Overtime Management', key: 'overtime-management' as const },
+    { icon: UserX, label: 'Departures', key: 'departures' as const },
+    { icon: Banknote, label: 'Bank Account Assistance', key: 'bank-account-assistance' as const },
+    { icon: Briefcase, label: 'Staff Employment Contracts', key: 'staff-contracts' as const },
+    { icon: Home, label: 'Staff Accommodation Management', key: 'staff-accommodation' as const },
+    { 
+      icon: CalendarDays, 
+      label: 'Staff Leave Management', 
+      key: 'staff-leave-management' as const,
+      subItems: [
+        { icon: FileText, label: 'Staff Leave', key: 'staff-leave' as const },
+        { icon: BarChart3, label: 'Leave Balance', key: 'leave-balance' as const }
+      ]
+    },
     { 
       icon: Calculator, 
       label: 'Quota Management', 
@@ -369,9 +402,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
         { icon: FileCheck, label: 'VISA Sticker', key: 'visa-sticker' as const }
       ]
     },
-    { icon: BarChart3, label: 'Analytics', key: 'analytics' as const },
     { icon: PieChart, label: 'Reports', key: 'reports' as const },
-    { icon: Calendar, label: 'Schedule', key: 'schedule' as const },
     { 
       icon: Settings, 
       label: 'Settings', 
@@ -411,6 +442,14 @@ export function Dashboard({ onLogout }: DashboardProps) {
     } else if (key === 'user-management' || key === 'role-management' || key === 'theme-demo') {
       setExpandedMenuItems(prev => 
         prev.includes('settings') ? prev : [...prev, 'settings']
+      )
+    } else if (key === 'staff-leave' || key === 'leave-balance') {
+      setExpandedMenuItems(prev => 
+        prev.includes('staff-leave-management') ? prev : [...prev, 'staff-leave-management']
+      )
+    } else if (key === 'site-allocation' || key === 'island-transfer') {
+      setExpandedMenuItems(prev => 
+        prev.includes('site-management') ? prev : [...prev, 'site-management']
       )
     }
   }, [])
@@ -508,20 +547,24 @@ export function Dashboard({ onLogout }: DashboardProps) {
         return <IslandTransfer />
       case 'hr-handbook':
         return <HRHandbook />
-      case 'analytics':
-        return (
-          <div className="p-6">
-            <h2 className="text-2xl font-bold mb-4">Analytics</h2>
-            <p className="text-muted-foreground">Analytics content coming soon...</p>
-          </div>
-        )
-      case 'schedule':
-        return (
-          <div className="p-6">
-            <h2 className="text-2xl font-bold mb-4">Schedule</h2>
-            <p className="text-muted-foreground">Schedule content coming soon...</p>
-          </div>
-        )
+      case 'staff-leave':
+        return <StaffLeave />
+      case 'leave-balance':
+        return <LeaveBalance />
+      case 'email-management':
+        return <EmailManagement />
+      case 'staff-accommodation':
+        return <StaffAccommodation />
+      case 'staff-contracts':
+        return <StaffContracts />
+      case 'prepaid-card':
+        return <PrepaidCardManagement />
+      case 'overtime-management':
+        return <OvertimeManagement />
+      case 'departures':
+        return <DepartureManagement />
+      case 'bank-account-assistance':
+        return <BankAccountAssistance />
       case 'settings':
         return (
           <div className="p-6">

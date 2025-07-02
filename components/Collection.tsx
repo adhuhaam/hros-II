@@ -55,7 +55,9 @@ import {
   Flag,
   Home,
   Settings,
-  MoreHorizontal
+  MoreHorizontal,
+  Package,
+  CircleDollarSign
 } from 'lucide-react'
 import { toast } from 'sonner@2.0.3'
 
@@ -68,9 +70,11 @@ interface Payment {
   nationality: string
   position: string
   depositAmount: number
+  walletBalance: number
+  reservedAmount: number
   paidAmount: number
-  remainingAmount: number
-  paymentStatus: 'pending' | 'partial' | 'completed' | 'overdue' | 'refunded'
+  remainingBalance: number
+  collectionStatus: 'wallet-balance' | 'reserved-for-collection' | 'paid' | 'balance'
   paymentMethod: 'bank-transfer' | 'cash' | 'card' | 'cheque'
   transactionRef?: string
   dueDate: string
@@ -100,7 +104,7 @@ interface PaymentForm {
   notes: string
 }
 
-type SortField = 'candidateName' | 'nationality' | 'depositAmount' | 'paidAmount' | 'dueDate' | 'paymentStatus'
+type SortField = 'candidateName' | 'nationality' | 'depositAmount' | 'paidAmount' | 'dueDate' | 'collectionStatus'
 type SortDirection = 'asc' | 'desc'
 
 // Fixed deposit rates by nationality
@@ -117,7 +121,39 @@ const DEPOSIT_RATES = {
   'Other': 18000
 }
 
-// Comprehensive dummy data for work permit deposits
+// Collection Status Configuration - 4 statuses
+const collectionStatusConfig = {
+  'wallet-balance': {
+    label: 'Wallet Balance',
+    color: 'text-blue-600',
+    bgColor: 'bg-blue-50 dark:bg-blue-950/30',
+    icon: Wallet,
+    description: 'Funds available in company wallet for collection'
+  },
+  'reserved-for-collection': {
+    label: 'Reserved for Collection',
+    color: 'text-orange-600',
+    bgColor: 'bg-orange-50 dark:bg-orange-950/30',
+    icon: Package,
+    description: 'Amount reserved and awaiting collection processing'
+  },
+  'paid': {
+    label: 'Paid',
+    color: 'text-green-600',
+    bgColor: 'bg-green-50 dark:bg-green-950/30',
+    icon: CheckCircle,
+    description: 'Collection payment completed successfully'
+  },
+  'balance': {
+    label: 'Balance',
+    color: 'text-purple-600',
+    bgColor: 'bg-purple-50 dark:bg-purple-950/30',
+    icon: CircleDollarSign,
+    description: 'Remaining balance after partial payment'
+  }
+}
+
+// Comprehensive dummy data with new 4-status system
 const mockPayments: Payment[] = [
   {
     id: '1',
@@ -128,9 +164,11 @@ const mockPayments: Payment[] = [
     nationality: 'Bangladeshi',
     position: 'Construction Worker',
     depositAmount: 15000,
+    walletBalance: 0,
+    reservedAmount: 0,
     paidAmount: 15000,
-    remainingAmount: 0,
-    paymentStatus: 'completed',
+    remainingBalance: 0,
+    collectionStatus: 'paid',
     paymentMethod: 'bank-transfer',
     transactionRef: 'BT2024001',
     dueDate: '2024-01-15',
@@ -161,16 +199,18 @@ const mockPayments: Payment[] = [
     nationality: 'Indian',
     position: 'Site Engineer',
     depositAmount: 18000,
+    walletBalance: 8000,
+    reservedAmount: 0,
     paidAmount: 10000,
-    remainingAmount: 8000,
-    paymentStatus: 'partial',
+    remainingBalance: 8000,
+    collectionStatus: 'balance',
     paymentMethod: 'cash',
     transactionRef: 'CSH2024002',
     dueDate: '2024-02-01',
     paidDate: '2024-01-20',
     collectedBy: 'Sarah Johnson',
     avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
-    notes: 'Partial payment received. Balance to be paid before visa processing.',
+    notes: 'Partial payment received. Balance available in wallet.',
     paymentHistory: [
       {
         id: 'PAY002',
@@ -194,14 +234,16 @@ const mockPayments: Payment[] = [
     nationality: 'Pakistani',
     position: 'Electrician',
     depositAmount: 16000,
+    walletBalance: 16000,
+    reservedAmount: 0,
     paidAmount: 0,
-    remainingAmount: 16000,
-    paymentStatus: 'pending',
+    remainingBalance: 16000,
+    collectionStatus: 'wallet-balance',
     paymentMethod: 'bank-transfer',
     dueDate: '2024-01-30',
     collectedBy: 'Kumar Patel',
     avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&h=150&fit=crop&crop=face',
-    notes: 'Candidate contacted. Payment expected this week.',
+    notes: 'Funds available in wallet. Collection pending.',
     paymentHistory: [],
     createdAt: '2024-01-25',
     updatedAt: '2024-01-25'
@@ -215,27 +257,18 @@ const mockPayments: Payment[] = [
     nationality: 'Sri Lankan',
     position: 'HR Assistant',
     depositAmount: 20000,
-    paidAmount: 20000,
-    remainingAmount: 0,
-    paymentStatus: 'completed',
+    walletBalance: 5000,
+    reservedAmount: 20000,
+    paidAmount: 0,
+    remainingBalance: 20000,
+    collectionStatus: 'reserved-for-collection',
     paymentMethod: 'card',
     transactionRef: 'CD2024003',
     dueDate: '2024-01-20',
-    paidDate: '2024-01-18',
     collectedBy: 'Aisha Mohamed',
     avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b742?w=150&h=150&fit=crop&crop=face',
-    notes: 'Payment completed via credit card. Quick processing requested.',
-    paymentHistory: [
-      {
-        id: 'PAY003',
-        amount: 20000,
-        method: 'card',
-        transactionRef: 'CD2024003',
-        date: '2024-01-18',
-        collectedBy: 'Aisha Mohamed',
-        notes: 'Credit card payment processed successfully'
-      }
-    ],
+    notes: 'Amount reserved for collection processing. Awaiting final payment.',
+    paymentHistory: [],
     createdAt: '2024-01-12',
     updatedAt: '2024-01-18'
   },
@@ -248,27 +281,18 @@ const mockPayments: Payment[] = [
     nationality: 'Nepalese',
     position: 'Security Guard',
     depositAmount: 14000,
-    paidAmount: 5000,
-    remainingAmount: 9000,
-    paymentStatus: 'partial',
+    walletBalance: 14000,
+    reservedAmount: 0,
+    paidAmount: 0,
+    remainingBalance: 14000,
+    collectionStatus: 'wallet-balance',
     paymentMethod: 'cash',
     transactionRef: 'CSH2024004',
     dueDate: '2024-02-05',
-    paidDate: '2024-01-28',
     collectedBy: 'Ali Nasheed',
     avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&h=150&fit=crop&crop=face',
-    notes: 'First installment received. Next payment scheduled for next week.',
-    paymentHistory: [
-      {
-        id: 'PAY004',
-        amount: 5000,
-        method: 'cash',
-        transactionRef: 'CSH2024004',
-        date: '2024-01-28',
-        collectedBy: 'Ali Nasheed',
-        notes: 'Partial payment - first installment'
-      }
-    ],
+    notes: 'Wallet balance available. Ready for collection processing.',
+    paymentHistory: [],
     createdAt: '2024-01-20',
     updatedAt: '2024-01-28'
   },
@@ -281,146 +305,30 @@ const mockPayments: Payment[] = [
     nationality: 'Filipino',
     position: 'Foreman',
     depositAmount: 22000,
-    paidAmount: 0,
-    remainingAmount: 22000,
-    paymentStatus: 'overdue',
+    walletBalance: 2000,
+    reservedAmount: 0,
+    paidAmount: 20000,
+    remainingBalance: 2000,
+    collectionStatus: 'balance',
     paymentMethod: 'bank-transfer',
     dueDate: '2024-01-10',
+    paidDate: '2024-01-15',
     collectedBy: 'Ahmed Hassan',
     avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150&h=150&fit=crop&crop=face',
-    notes: 'Payment overdue. Multiple follow-ups made. Candidate requested extension.',
-    paymentHistory: [],
-    createdAt: '2024-01-01',
-    updatedAt: '2024-01-15'
-  },
-  {
-    id: '7',
-    candidateId: 'CAND007',
-    candidateName: 'Siti Nurhaliza',
-    email: 'siti.nurhaliza@email.com',
-    phone: '+62 812 3456 7890',
-    nationality: 'Indonesian',
-    position: 'Housekeeping Supervisor',
-    depositAmount: 17000,
-    paidAmount: 17000,
-    remainingAmount: 0,
-    paymentStatus: 'completed',
-    paymentMethod: 'cheque',
-    transactionRef: 'CHQ2024001',
-    dueDate: '2024-01-25',
-    paidDate: '2024-01-22',
-    collectedBy: 'Fatima Al-Rashid',
-    avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
-    notes: 'Payment completed via company cheque. All documentation in order.',
-    paymentHistory: [
-      {
-        id: 'PAY005',
-        amount: 17000,
-        method: 'cheque',
-        transactionRef: 'CHQ2024001',
-        date: '2024-01-22',
-        collectedBy: 'Fatima Al-Rashid',
-        notes: 'Cheque payment cleared successfully'
-      }
-    ],
-    createdAt: '2024-01-18',
-    updatedAt: '2024-01-22'
-  },
-  {
-    id: '8',
-    candidateId: 'CAND008',
-    candidateName: 'Nguyen Van Duc',
-    email: 'nguyen.duc@email.com',
-    phone: '+84 90 123 4567',
-    nationality: 'Vietnamese',
-    position: 'Welder',
-    depositAmount: 19000,
-    paidAmount: 12000,
-    remainingAmount: 7000,
-    paymentStatus: 'partial',
-    paymentMethod: 'bank-transfer',
-    transactionRef: 'BT2024005',
-    dueDate: '2024-02-10',
-    paidDate: '2024-02-01',
-    collectedBy: 'Chen Wei Li',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
-    notes: 'Partial payment received. Balance payment in progress.',
+    notes: 'Majority payment completed. Small balance remaining.',
     paymentHistory: [
       {
         id: 'PAY006',
-        amount: 8000,
-        method: 'bank-transfer',
-        transactionRef: 'BT2024005',
-        date: '2024-02-01',
-        collectedBy: 'Chen Wei Li',
-        notes: 'First installment via bank transfer'
-      },
-      {
-        id: 'PAY007',
-        amount: 4000,
-        method: 'cash',
-        transactionRef: 'CSH2024006',
-        date: '2024-02-03',
-        collectedBy: 'Chen Wei Li',
-        notes: 'Additional payment in cash'
-      }
-    ],
-    createdAt: '2024-01-30',
-    updatedAt: '2024-02-03'
-  },
-  {
-    id: '9',
-    candidateId: 'CAND009',
-    candidateName: 'Somchai Jaidee',
-    email: 'somchai.jaidee@email.com',
-    phone: '+66 89 123 4567',
-    nationality: 'Thai',
-    position: 'Chef',
-    depositAmount: 21000,
-    paidAmount: 21000,
-    remainingAmount: 0,
-    paymentStatus: 'completed',
-    paymentMethod: 'bank-transfer',
-    transactionRef: 'BT2024006',
-    dueDate: '2024-02-15',
-    paidDate: '2024-02-10',
-    collectedBy: 'Kumar Patel',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
-    notes: 'Early payment received. Express processing requested.',
-    paymentHistory: [
-      {
-        id: 'PAY008',
-        amount: 21000,
+        amount: 20000,
         method: 'bank-transfer',
         transactionRef: 'BT2024006',
-        date: '2024-02-10',
-        collectedBy: 'Kumar Patel',
-        notes: 'Full payment - early settlement'
+        date: '2024-01-15',
+        collectedBy: 'Ahmed Hassan',
+        notes: 'Major payment installment'
       }
     ],
-    createdAt: '2024-02-05',
-    updatedAt: '2024-02-10'
-  },
-  {
-    id: '10',
-    candidateId: 'CAND010',
-    candidateName: 'Ahmed Al-Mahmoud',
-    email: 'ahmed.mahmoud@email.com',
-    phone: '+20 10 1234 5678',
-    nationality: 'Other',
-    position: 'Mechanical Engineer',
-    depositAmount: 18000,
-    paidAmount: 0,
-    remainingAmount: 18000,
-    paymentStatus: 'pending',
-    paymentMethod: 'bank-transfer',
-    dueDate: '2024-02-20',
-    collectedBy: 'Sarah Johnson',
-    avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&h=150&fit=crop&crop=face',
-    notes: 'New candidate. Bank details shared. Payment expected soon.',
-    paymentHistory: [],
-    createdAt: '2024-02-12',
-    updatedAt: '2024-02-12'
+    createdAt: '2024-01-01',
+    updatedAt: '2024-01-15'
   }
 ]
 
@@ -454,33 +362,30 @@ export function Collection() {
   const summaryStats = useMemo(() => {
     const totalCandidates = payments.length
     const totalDepositAmount = payments.reduce((sum, p) => sum + p.depositAmount, 0)
+    const totalWalletBalance = payments.reduce((sum, p) => sum + p.walletBalance, 0)
+    const totalReserved = payments.reduce((sum, p) => sum + p.reservedAmount, 0)
     const totalCollected = payments.reduce((sum, p) => sum + p.paidAmount, 0)
-    const totalPending = payments.reduce((sum, p) => sum + p.remainingAmount, 0)
+    const totalBalance = payments.reduce((sum, p) => sum + p.remainingBalance, 0)
     
-    const completedCount = payments.filter(p => p.paymentStatus === 'completed').length
-    const pendingCount = payments.filter(p => p.paymentStatus === 'pending').length
-    const partialCount = payments.filter(p => p.paymentStatus === 'partial').length
-    const overdueCount = payments.filter(p => p.paymentStatus === 'overdue').length
+    const walletBalanceCount = payments.filter(p => p.collectionStatus === 'wallet-balance').length
+    const reservedCount = payments.filter(p => p.collectionStatus === 'reserved-for-collection').length
+    const paidCount = payments.filter(p => p.collectionStatus === 'paid').length
+    const balanceCount = payments.filter(p => p.collectionStatus === 'balance').length
     
     const collectionRate = totalDepositAmount > 0 ? (totalCollected / totalDepositAmount) * 100 : 0
-    
-    // Payment method breakdown
-    const methodBreakdown = payments.reduce((acc, payment) => {
-      acc[payment.paymentMethod] = (acc[payment.paymentMethod] || 0) + payment.paidAmount
-      return acc
-    }, {} as Record<string, number>)
     
     return {
       totalCandidates,
       totalDepositAmount,
+      totalWalletBalance,
+      totalReserved,
       totalCollected,
-      totalPending,
-      completedCount,
-      pendingCount,
-      partialCount,
-      overdueCount,
-      collectionRate,
-      methodBreakdown
+      totalBalance,
+      walletBalanceCount,
+      reservedCount,
+      paidCount,
+      balanceCount,
+      collectionRate
     }
   }, [payments])
 
@@ -499,7 +404,7 @@ export function Collection() {
                           payment.position.toLowerCase().includes(searchQuery.toLowerCase())
       
       const matchesNationality = nationalityFilter === 'all' || payment.nationality === nationalityFilter
-      const matchesStatus = statusFilter === 'all' || payment.paymentStatus === statusFilter
+      const matchesStatus = statusFilter === 'all' || payment.collectionStatus === statusFilter
       
       return matchesSearch && matchesNationality && matchesStatus
     })
@@ -541,15 +446,19 @@ export function Collection() {
     return sortDirection === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />
   }
 
-  const getStatusColor = (status: Payment['paymentStatus']) => {
-    switch (status) {
-      case 'completed': return 'bg-green-500/10 text-green-700 border-green-200'
-      case 'partial': return 'bg-yellow-500/10 text-yellow-700 border-yellow-200'
-      case 'pending': return 'bg-blue-500/10 text-blue-700 border-blue-200'
-      case 'overdue': return 'bg-red-500/10 text-red-700 border-red-200'
-      case 'refunded': return 'bg-gray-500/10 text-gray-700 border-gray-200'
-      default: return 'bg-gray-500/10 text-gray-600 border-gray-200'
-    }
+  // Get status badge
+  const getStatusBadge = (status: Payment['collectionStatus']) => {
+    const config = collectionStatusConfig[status]
+    if (!config) return null
+    
+    const IconComponent = config.icon
+    
+    return (
+      <Badge variant="outline" className={`${config.bgColor} ${config.color} border-current`}>
+        <IconComponent className="h-3 w-3 mr-1" />
+        {config.label}
+      </Badge>
+    )
   }
 
   const getPaymentMethodIcon = (method: string) => {
@@ -562,6 +471,11 @@ export function Collection() {
     }
   }
 
+  // Format currency
+  const formatCurrency = (amount: number) => {
+    return `MVR ${amount.toLocaleString()}`
+  }
+
   const handleAddPayment = useCallback(async () => {
     if (!selectedPayment || !paymentForm.amount) {
       toast.error('Please enter a valid payment amount')
@@ -569,7 +483,7 @@ export function Collection() {
     }
 
     const amount = parseFloat(paymentForm.amount)
-    if (amount <= 0 || amount > selectedPayment.remainingAmount) {
+    if (amount <= 0 || amount > selectedPayment.remainingBalance) {
       toast.error('Invalid payment amount')
       return
     }
@@ -591,8 +505,8 @@ export function Collection() {
       const updatedPayment: Payment = {
         ...selectedPayment,
         paidAmount: selectedPayment.paidAmount + amount,
-        remainingAmount: selectedPayment.remainingAmount - amount,
-        paymentStatus: selectedPayment.remainingAmount - amount === 0 ? 'completed' : 'partial',
+        remainingBalance: selectedPayment.remainingBalance - amount,
+        collectionStatus: selectedPayment.remainingBalance - amount === 0 ? 'paid' : 'balance',
         paymentMethod: paymentForm.method as Payment['paymentMethod'],
         transactionRef: paymentForm.transactionRef || selectedPayment.transactionRef,
         paidDate: new Date().toISOString().split('T')[0],
@@ -611,7 +525,7 @@ export function Collection() {
         notes: ''
       })
       
-      toast.success(`Payment of MVR ${amount.toLocaleString()} recorded successfully`)
+      toast.success(`Payment of ${formatCurrency(amount)} recorded successfully`)
 
     } catch (error) {
       toast.error('Failed to record payment. Please try again.')
@@ -619,6 +533,43 @@ export function Collection() {
       setIsLoading(false)
     }
   }, [selectedPayment, paymentForm])
+
+  // Handle status update
+  const handleStatusUpdate = (recordId: string, newStatus: string) => {
+    setPayments(prev => prev.map(record => {
+      if (record.id === recordId) {
+        const updatedRecord = { 
+          ...record, 
+          collectionStatus: newStatus as Payment['collectionStatus'],
+          updatedAt: new Date().toISOString().split('T')[0]
+        }
+        
+        // Update financial values based on status
+        switch (newStatus) {
+          case 'reserved-for-collection':
+            updatedRecord.reservedAmount = record.depositAmount
+            updatedRecord.walletBalance = Math.max(0, record.walletBalance - record.depositAmount)
+            break
+          case 'paid':
+            updatedRecord.paidAmount = record.depositAmount
+            updatedRecord.remainingBalance = 0
+            updatedRecord.reservedAmount = 0
+            updatedRecord.paidDate = new Date().toISOString().split('T')[0]
+            break
+          case 'wallet-balance':
+            updatedRecord.walletBalance = record.depositAmount
+            updatedRecord.reservedAmount = 0
+            break
+        }
+        
+        return updatedRecord
+      }
+      return record
+    }))
+    
+    const config = collectionStatusConfig[newStatus as keyof typeof collectionStatusConfig]
+    toast.success(`Collection status updated to ${config.label}`)
+  }
 
   const handleSendReminder = useCallback(async (payment: Payment) => {
     setIsLoading(true)
@@ -642,7 +593,7 @@ export function Collection() {
             Work Permit Deposit Collection
           </h1>
           <p className="text-muted-foreground">
-            Track and manage work permit deposit payments • {filteredAndSortedPayments.length} record{filteredAndSortedPayments.length !== 1 ? 's' : ''} found
+            Track and manage work permit deposit collections • {filteredAndSortedPayments.length} record{filteredAndSortedPayments.length !== 1 ? 's' : ''} found
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -661,73 +612,101 @@ export function Collection() {
         </div>
       </div>
 
-      {/* Summary Statistics */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      {/* Summary Statistics - 4 Collection Status Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Deposits</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Wallet Balance</CardTitle>
+            <Wallet className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">MVR {summaryStats.totalDepositAmount.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-blue-600">{summaryStats.walletBalanceCount}</div>
             <p className="text-xs text-muted-foreground">
-              Expected collection
+              {formatCurrency(summaryStats.totalWalletBalance)} available
             </p>
           </CardContent>
         </Card>
 
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Collected</CardTitle>
+            <CardTitle className="text-sm font-medium">Reserved for Collection</CardTitle>
+            <Package className="h-4 w-4 text-orange-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-orange-600">{summaryStats.reservedCount}</div>
+            <p className="text-xs text-muted-foreground">
+              {formatCurrency(summaryStats.totalReserved)} reserved
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Paid</CardTitle>
             <CheckCircle className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">MVR {summaryStats.totalCollected.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-green-600">{summaryStats.paidCount}</div>
             <p className="text-xs text-muted-foreground">
-              {summaryStats.collectionRate.toFixed(1)}% collection rate
+              {formatCurrency(summaryStats.totalCollected)} completed
             </p>
           </CardContent>
         </Card>
 
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending</CardTitle>
-            <Clock className="h-4 w-4 text-yellow-600" />
+            <CardTitle className="text-sm font-medium">Balance</CardTitle>
+            <CircleDollarSign className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">MVR {summaryStats.totalPending.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-purple-600">{summaryStats.balanceCount}</div>
             <p className="text-xs text-muted-foreground">
-              {summaryStats.pendingCount + summaryStats.partialCount} candidates
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Overdue</CardTitle>
-            <AlertCircle className="h-4 w-4 text-red-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">{summaryStats.overdueCount}</div>
-            <p className="text-xs text-muted-foreground">
-              Requires follow-up
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Completed</CardTitle>
-            <Target className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{summaryStats.completedCount}</div>
-            <p className="text-xs text-muted-foreground">
-              Full payments received
+              {formatCurrency(summaryStats.totalBalance)} remaining
             </p>
           </CardContent>
         </Card>
       </div>
+
+      {/* Financial Overview */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Financial Overview</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-primary">
+                {formatCurrency(summaryStats.totalDepositAmount)}
+              </div>
+              <div className="text-sm text-muted-foreground">Total Deposits</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-600">
+                {formatCurrency(summaryStats.totalWalletBalance)}
+              </div>
+              <div className="text-sm text-muted-foreground">Wallet Balance</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-orange-600">
+                {formatCurrency(summaryStats.totalReserved)}
+              </div>
+              <div className="text-sm text-muted-foreground">Reserved</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-600">
+                {formatCurrency(summaryStats.totalCollected)}
+              </div>
+              <div className="text-sm text-muted-foreground">Paid</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-purple-600">
+                {formatCurrency(summaryStats.totalBalance)}
+              </div>
+              <div className="text-sm text-muted-foreground">Balance</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Collection Rate Chart */}
       <Card>
@@ -746,21 +725,21 @@ export function Collection() {
             <Progress value={summaryStats.collectionRate} className="h-3" />
             
             <div className="grid gap-3 md:grid-cols-4 mt-6">
-              <div className="text-center p-3 bg-green-50 rounded-lg">
-                <div className="text-2xl font-bold text-green-700">{summaryStats.completedCount}</div>
-                <div className="text-sm text-green-600">Completed</div>
-              </div>
-              <div className="text-center p-3 bg-yellow-50 rounded-lg">
-                <div className="text-2xl font-bold text-yellow-700">{summaryStats.partialCount}</div>
-                <div className="text-sm text-yellow-600">Partial</div>
-              </div>
               <div className="text-center p-3 bg-blue-50 rounded-lg">
-                <div className="text-2xl font-bold text-blue-700">{summaryStats.pendingCount}</div>
-                <div className="text-sm text-blue-600">Pending</div>
+                <div className="text-2xl font-bold text-blue-700">{summaryStats.walletBalanceCount}</div>
+                <div className="text-sm text-blue-600">Wallet Balance</div>
               </div>
-              <div className="text-center p-3 bg-red-50 rounded-lg">
-                <div className="text-2xl font-bold text-red-700">{summaryStats.overdueCount}</div>
-                <div className="text-sm text-red-600">Overdue</div>
+              <div className="text-center p-3 bg-orange-50 rounded-lg">
+                <div className="text-2xl font-bold text-orange-700">{summaryStats.reservedCount}</div>
+                <div className="text-sm text-orange-600">Reserved</div>
+              </div>
+              <div className="text-center p-3 bg-green-50 rounded-lg">
+                <div className="text-2xl font-bold text-green-700">{summaryStats.paidCount}</div>
+                <div className="text-sm text-green-600">Paid</div>
+              </div>
+              <div className="text-center p-3 bg-purple-50 rounded-lg">
+                <div className="text-2xl font-bold text-purple-700">{summaryStats.balanceCount}</div>
+                <div className="text-sm text-purple-600">Balance</div>
               </div>
             </div>
           </div>
@@ -794,139 +773,83 @@ export function Collection() {
             </Select>
             
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[120px]">
-                <SelectValue placeholder="Status" />
+              <SelectTrigger className="w-[160px]">
+                <SelectValue placeholder="Collection Status" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="partial">Partial</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="overdue">Overdue</SelectItem>
-                <SelectItem value="refunded">Refunded</SelectItem>
+                <SelectItem value="wallet-balance">Wallet Balance</SelectItem>
+                <SelectItem value="reserved-for-collection">Reserved for Collection</SelectItem>
+                <SelectItem value="paid">Paid</SelectItem>
+                <SelectItem value="balance">Balance</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
       </div>
 
-      {/* Results Table */}
-      {filteredAndSortedPayments.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-16">
-            <div className="text-center space-y-6">
-              <div className="mx-auto h-24 w-24 rounded-full bg-muted/30 flex items-center justify-center">
-                <DollarSign className="h-12 w-12 text-muted-foreground" />
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-xl font-semibold">No payment records found</h3>
-                <p className="text-muted-foreground max-w-sm mx-auto">
-                  {searchQuery || nationalityFilter !== 'all' || statusFilter !== 'all'
-                    ? 'Try adjusting your search filters to find payment records.'
-                    : 'No work permit deposits have been recorded yet. Start by adding your first collection record.'}
-                </p>
-              </div>
-              {!searchQuery && nationalityFilter === 'all' && statusFilter === 'all' && (
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add First Collection
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <Card>
+      {/* Collection Records Table */}
+      <Card>
+        <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>
-                  <Button variant="ghost" onClick={() => handleSort('candidateName')} className="h-auto p-0 font-medium">
-                    Candidate {getSortIcon('candidateName')}
-                  </Button>
-                </TableHead>
-                <TableHead>
-                  <Button variant="ghost" onClick={() => handleSort('nationality')} className="h-auto p-0 font-medium">
-                    Nationality {getSortIcon('nationality')}
-                  </Button>
-                </TableHead>
-                <TableHead>Position</TableHead>
-                <TableHead>
-                  <Button variant="ghost" onClick={() => handleSort('depositAmount')} className="h-auto p-0 font-medium">
-                    Deposit Amount {getSortIcon('depositAmount')}
-                  </Button>
-                </TableHead>
-                <TableHead>
-                  <Button variant="ghost" onClick={() => handleSort('paidAmount')} className="h-auto p-0 font-medium">
-                    Paid Amount {getSortIcon('paidAmount')}
-                  </Button>
-                </TableHead>
-                <TableHead>Remaining</TableHead>
-                <TableHead>
-                  <Button variant="ghost" onClick={() => handleSort('dueDate')} className="h-auto p-0 font-medium">
-                    Due Date {getSortIcon('dueDate')}
-                  </Button>
-                </TableHead>
-                <TableHead>
-                  <Button variant="ghost" onClick={() => handleSort('paymentStatus')} className="h-auto p-0 font-medium">
-                    Status {getSortIcon('paymentStatus')}
-                  </Button>
-                </TableHead>
+                <TableHead>Candidate</TableHead>
+                <TableHead>Collection Status</TableHead>
+                <TableHead>Financial Summary</TableHead>
+                <TableHead>Deposit Amount</TableHead>
+                <TableHead>Due Date</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredAndSortedPayments.map((payment) => (
-                <TableRow key={payment.id} className="hover:bg-muted/30">
+                <TableRow key={payment.id}>
                   <TableCell>
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-center gap-3">
                       <Avatar className="h-8 w-8">
                         <AvatarImage src={payment.avatar} alt={payment.candidateName} />
-                        <AvatarFallback>{payment.candidateName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                        <AvatarFallback className="bg-primary/10 text-primary">
+                          {payment.candidateName.split(' ').map(n => n[0]).join('')}
+                        </AvatarFallback>
                       </Avatar>
                       <div>
                         <div className="font-medium">{payment.candidateName}</div>
-                        <div className="text-sm text-muted-foreground">{payment.email}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {payment.nationality} • {payment.position}
+                        </div>
                       </div>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Flag className="h-4 w-4 text-muted-foreground" />
-                      {payment.nationality}
-                    </div>
-                  </TableCell>
-                  <TableCell>{payment.position}</TableCell>
-                  <TableCell>
-                    <div className="font-medium">MVR {payment.depositAmount.toLocaleString()}</div>
+                    {getStatusBadge(payment.collectionStatus)}
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      {getPaymentMethodIcon(payment.paymentMethod)}
-                      <span className="font-medium text-green-600">
-                        MVR {payment.paidAmount.toLocaleString()}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <span className={payment.remainingAmount > 0 ? 'text-red-600 font-medium' : 'text-gray-500'}>
-                      MVR {payment.remainingAmount.toLocaleString()}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                      {new Date(payment.dueDate).toLocaleDateString()}
+                    <div className="space-y-1">
+                      <div className="text-sm">
+                        <span className="text-muted-foreground">Wallet:</span> {formatCurrency(payment.walletBalance)}
+                      </div>
+                      <div className="text-sm">
+                        <span className="text-muted-foreground">Paid:</span> {formatCurrency(payment.paidAmount)}
+                      </div>
+                      <div className="text-sm">
+                        <span className="text-muted-foreground">Balance:</span> {formatCurrency(payment.remainingBalance)}
+                      </div>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge className={getStatusColor(payment.paymentStatus)}>
-                      {payment.paymentStatus === 'completed' && <CheckCircle className="h-3 w-3 mr-1" />}
-                      {payment.paymentStatus === 'partial' && <Clock className="h-3 w-3 mr-1" />}
-                      {payment.paymentStatus === 'pending' && <Clock className="h-3 w-3 mr-1" />}
-                      {payment.paymentStatus === 'overdue' && <AlertCircle className="h-3 w-3 mr-1" />}
-                      {payment.paymentStatus}
-                    </Badge>
+                    <div>
+                      <div className="font-medium">
+                        {formatCurrency(payment.depositAmount)}
+                      </div>
+                      <div className="text-sm text-muted-foreground flex items-center gap-1">
+                        {getPaymentMethodIcon(payment.paymentMethod)}
+                        {payment.paymentMethod.replace('-', ' ')}
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-sm">
+                    {payment.dueDate ? new Date(payment.dueDate).toLocaleDateString() : '-'}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
@@ -938,9 +861,9 @@ export function Collection() {
                           setShowDetailsDialog(true)
                         }}
                       >
-                        <Eye className="h-3 w-3" />
+                        <Eye className="h-4 w-4" />
                       </Button>
-                      {payment.paymentStatus !== 'completed' && (
+                      {payment.collectionStatus !== 'paid' && (
                         <Button
                           size="sm"
                           onClick={() => {
@@ -948,18 +871,7 @@ export function Collection() {
                             setShowPaymentDialog(true)
                           }}
                         >
-                          <Plus className="h-3 w-3 mr-1" />
-                          Add Payment
-                        </Button>
-                      )}
-                      {(payment.paymentStatus === 'pending' || payment.paymentStatus === 'overdue') && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleSendReminder(payment)}
-                          disabled={isLoading}
-                        >
-                          <Send className="h-3 w-3" />
+                          <Plus className="h-4 w-4" />
                         </Button>
                       )}
                     </div>
@@ -968,227 +880,91 @@ export function Collection() {
               ))}
             </TableBody>
           </Table>
-        </Card>
-      )}
+        </CardContent>
+      </Card>
 
-      {/* Add Payment Dialog */}
-      <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Record Payment</DialogTitle>
-            <DialogDescription>
-              Add payment for {selectedPayment?.candidateName}
-            </DialogDescription>
-          </DialogHeader>
-          
-          {selectedPayment && (
-            <div className="space-y-6">
-              <div className="p-4 bg-muted/20 rounded-lg">
-                <div className="grid gap-2 text-sm">
-                  <div className="flex justify-between">
-                    <span>Total Deposit:</span>
-                    <span className="font-medium">MVR {selectedPayment.depositAmount.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Paid Amount:</span>
-                    <span className="font-medium text-green-600">MVR {selectedPayment.paidAmount.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Remaining:</span>
-                    <span className="font-medium text-red-600">MVR {selectedPayment.remainingAmount.toLocaleString()}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="amount">Payment Amount (MVR) *</Label>
-                  <Input
-                    id="amount"
-                    type="number"
-                    step="0.01"
-                    max={selectedPayment.remainingAmount}
-                    value={paymentForm.amount}
-                    onChange={(e) => setPaymentForm(prev => ({ ...prev, amount: e.target.value }))}
-                    placeholder={`Max: ${selectedPayment.remainingAmount.toLocaleString()}`}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="method">Payment Method *</Label>
-                  <Select value={paymentForm.method} onValueChange={(value) => setPaymentForm(prev => ({ ...prev, method: value }))}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="bank-transfer">Bank Transfer</SelectItem>
-                      <SelectItem value="cash">Cash</SelectItem>
-                      <SelectItem value="card">Credit/Debit Card</SelectItem>
-                      <SelectItem value="cheque">Cheque</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="transactionRef">Transaction Reference</Label>
-                  <Input
-                    id="transactionRef"
-                    value={paymentForm.transactionRef}
-                    onChange={(e) => setPaymentForm(prev => ({ ...prev, transactionRef: e.target.value }))}
-                    placeholder="Enter reference number"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="notes">Notes</Label>
-                  <Textarea
-                    id="notes"
-                    value={paymentForm.notes}
-                    onChange={(e) => setPaymentForm(prev => ({ ...prev, notes: e.target.value }))}
-                    placeholder="Additional notes about this payment"
-                    rows={3}
-                  />
-                </div>
-              </div>
-              
-              <div className="flex justify-end gap-2 pt-4">
-                <Button variant="outline" onClick={() => setShowPaymentDialog(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={handleAddPayment} disabled={isLoading || !paymentForm.amount}>
-                  {isLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                  Record Payment
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Payment Details Dialog */}
+      {/* Details Dialog */}
       <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Payment Details - {selectedPayment?.candidateName}</DialogTitle>
+            <DialogTitle>Collection Details - {selectedPayment?.candidateName}</DialogTitle>
             <DialogDescription>
-              Complete payment information and history
+              Complete collection and payment information
             </DialogDescription>
           </DialogHeader>
           
           {selectedPayment && (
             <div className="space-y-6">
+              {/* Status and Collection Info */}
               <div className="flex items-center gap-4">
-                <Avatar className="h-16 w-16">
-                  <AvatarImage src={selectedPayment.avatar} alt={selectedPayment.candidateName} />
-                  <AvatarFallback>{selectedPayment.candidateName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <h3 className="text-xl font-semibold">{selectedPayment.candidateName}</h3>
-                  <p className="text-muted-foreground">{selectedPayment.position}</p>
-                  <div className="flex items-center gap-2 mt-2">
-                    <Badge className={getStatusColor(selectedPayment.paymentStatus)}>
-                      {selectedPayment.paymentStatus}
-                    </Badge>
-                    <Badge variant="outline">
-                      {selectedPayment.nationality}
-                    </Badge>
-                  </div>
-                </div>
+                {getStatusBadge(selectedPayment.collectionStatus)}
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
+              {/* Financial Summary */}
+              <div className="grid grid-cols-2 gap-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">Contact Information</CardTitle>
+                    <CardTitle className="text-sm">Collection Summary</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <Mail className="h-4 w-4 text-muted-foreground" />
-                      <span>{selectedPayment.email}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Phone className="h-4 w-4 text-muted-foreground" />
-                      <span>{selectedPayment.phone}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Globe className="h-4 w-4 text-muted-foreground" />
-                      <span>{selectedPayment.nationality}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Briefcase className="h-4 w-4 text-muted-foreground" />
-                      <span>{selectedPayment.position}</span>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Payment Summary</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
+                  <CardContent className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span>Total Deposit:</span>
-                      <span className="font-medium">MVR {selectedPayment.depositAmount.toLocaleString()}</span>
+                      <span>Deposit Amount:</span>
+                      <span className="font-medium">{formatCurrency(selectedPayment.depositAmount)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Wallet Balance:</span>
+                      <span className="font-medium text-blue-600">{formatCurrency(selectedPayment.walletBalance)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Reserved Amount:</span>
+                      <span className="font-medium text-orange-600">{formatCurrency(selectedPayment.reservedAmount)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Paid Amount:</span>
-                      <span className="font-medium text-green-600">MVR {selectedPayment.paidAmount.toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Remaining:</span>
-                      <span className={`font-medium ${selectedPayment.remainingAmount > 0 ? 'text-red-600' : 'text-gray-500'}`}>
-                        MVR {selectedPayment.remainingAmount.toLocaleString()}
-                      </span>
+                      <span className="font-medium text-green-600">{formatCurrency(selectedPayment.paidAmount)}</span>
                     </div>
                     <Separator />
-                    <div className="flex justify-between">
-                      <span>Due Date:</span>
-                      <span>{new Date(selectedPayment.dueDate).toLocaleDateString()}</span>
+                    <div className="flex justify-between font-medium">
+                      <span>Remaining Balance:</span>
+                      <span className="text-purple-600">{formatCurrency(selectedPayment.remainingBalance)}</span>
                     </div>
-                    {selectedPayment.paidDate && (
-                      <div className="flex justify-between">
-                        <span>Last Payment:</span>
-                        <span>{new Date(selectedPayment.paidDate).toLocaleDateString()}</span>
-                      </div>
-                    )}
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm">Candidate Information</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2 text-sm">
+                    <div><strong>Email:</strong> {selectedPayment.email}</div>
+                    <div><strong>Phone:</strong> {selectedPayment.phone}</div>
+                    <div><strong>Nationality:</strong> {selectedPayment.nationality}</div>
+                    <div><strong>Position:</strong> {selectedPayment.position}</div>
                   </CardContent>
                 </Card>
               </div>
 
-              {selectedPayment.notes && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Notes</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm">{selectedPayment.notes}</p>
-                  </CardContent>
-                </Card>
-              )}
-
+              {/* Payment History */}
               {selectedPayment.paymentHistory.length > 0 && (
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">Payment History</CardTitle>
+                    <CardTitle className="text-sm">Payment History</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       {selectedPayment.paymentHistory.map((record) => (
-                        <div key={record.id} className="flex items-center justify-between p-3 bg-muted/20 rounded-lg">
-                          <div className="flex items-center gap-3">
-                            {getPaymentMethodIcon(record.method)}
-                            <div>
-                              <div className="font-medium">MVR {record.amount.toLocaleString()}</div>
-                              <div className="text-sm text-muted-foreground">
-                                {new Date(record.date).toLocaleDateString()} • {record.collectedBy}
-                              </div>
+                        <div key={record.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                          <div className="space-y-1">
+                            <div className="font-medium">{formatCurrency(record.amount)}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {record.method} • {record.date}
                             </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-sm font-medium capitalize">{record.method.replace('-', ' ')}</div>
-                            {record.transactionRef && (
-                              <div className="text-xs text-muted-foreground">{record.transactionRef}</div>
+                            {record.notes && (
+                              <div className="text-sm text-muted-foreground">{record.notes}</div>
                             )}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            by {record.collectedBy}
                           </div>
                         </div>
                       ))}
@@ -1196,8 +972,105 @@ export function Collection() {
                   </CardContent>
                 </Card>
               )}
+
+              {/* Notes */}
+              {selectedPayment.notes && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm">Notes</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground">{selectedPayment.notes}</p>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Payment Dialog */}
+      <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Record Payment</DialogTitle>
+            <DialogDescription>
+              Add a payment for {selectedPayment?.candidateName}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="amount">Payment Amount (MVR)</Label>
+              <Input
+                id="amount"
+                type="number"
+                placeholder="Enter amount"
+                value={paymentForm.amount}
+                onChange={(e) => setPaymentForm(prev => ({ ...prev, amount: e.target.value }))}
+                max={selectedPayment?.remainingBalance}
+              />
+              {selectedPayment && (
+                <div className="text-sm text-muted-foreground">
+                  Remaining balance: {formatCurrency(selectedPayment.remainingBalance)}
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="method">Payment Method</Label>
+              <Select 
+                value={paymentForm.method} 
+                onValueChange={(value) => setPaymentForm(prev => ({ ...prev, method: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="bank-transfer">Bank Transfer</SelectItem>
+                  <SelectItem value="cash">Cash</SelectItem>
+                  <SelectItem value="card">Credit/Debit Card</SelectItem>
+                  <SelectItem value="cheque">Cheque</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="transactionRef">Transaction Reference</Label>
+              <Input
+                id="transactionRef"
+                placeholder="Enter transaction reference"
+                value={paymentForm.transactionRef}
+                onChange={(e) => setPaymentForm(prev => ({ ...prev, transactionRef: e.target.value }))}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="notes">Notes</Label>
+              <Textarea
+                id="notes"
+                placeholder="Add any additional notes..."
+                value={paymentForm.notes}
+                onChange={(e) => setPaymentForm(prev => ({ ...prev, notes: e.target.value }))}
+              />
+            </div>
+          </div>
+          
+          <div className="flex justify-end gap-2 pt-4">
+            <Button variant="outline" onClick={() => setShowPaymentDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAddPayment} disabled={isLoading || !paymentForm.amount}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Recording...
+                </>
+              ) : (
+                'Record Payment'
+              )}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

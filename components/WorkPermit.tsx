@@ -831,23 +831,8 @@ export function WorkPermit() {
                     </div>
                   </div>
                   
-                  <div className="p-4 bg-muted rounded-lg">
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium">Total Amount:</span>
-                      <span className="text-lg font-bold">
-                        MVR {(createFormData.applicationFee + createFormData.governmentFee + createFormData.processingFee).toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm text-muted-foreground mt-1">
-                      <span>Monthly Collection (MVR 350 × {createFormData.validityPeriod} months):</span>
-                      <span className="font-medium">
-                        MVR {(350 * createFormData.validityPeriod).toLocaleString()}
-                      </span>
-                    </div>
-                  </div>
-                  
                   <div className="space-y-2">
-                    <Label htmlFor="ministry">Processing Ministry</Label>
+                    <Label htmlFor="ministry">Ministry *</Label>
                     <Select
                       value={createFormData.ministry}
                       onValueChange={(value: any) => setCreateFormData(prev => ({
@@ -867,6 +852,33 @@ export function WorkPermit() {
                       </SelectContent>
                     </Select>
                   </div>
+                  
+                  <div className="p-4 bg-muted rounded-lg">
+                    <div className="text-sm font-medium mb-2">Fee Summary</div>
+                    <div className="space-y-1 text-sm">
+                      <div className="flex justify-between">
+                        <span>Application Fee:</span>
+                        <span>MVR {createFormData.applicationFee}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Government Fee:</span>
+                        <span>MVR {createFormData.governmentFee}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Processing Fee:</span>
+                        <span>MVR {createFormData.processingFee}</span>
+                      </div>
+                      <Separator />
+                      <div className="flex justify-between font-medium">
+                        <span>Total Amount:</span>
+                        <span>MVR {createFormData.applicationFee + createFormData.governmentFee + createFormData.processingFee}</span>
+                      </div>
+                      <div className="flex justify-between text-muted-foreground">
+                        <span>Monthly Collection:</span>
+                        <span>MVR 350 × {createFormData.validityPeriod} months</span>
+                      </div>
+                    </div>
+                  </div>
                 </TabsContent>
                 
                 <TabsContent value="agent" className="space-y-4 mt-4">
@@ -875,7 +887,7 @@ export function WorkPermit() {
                       <Label htmlFor="agentName">Agent Name</Label>
                       <Input
                         id="agentName"
-                        placeholder="Ibrahim Waheed"
+                        placeholder="Enter agent name"
                         value={createFormData.agentName}
                         onChange={(e) => setCreateFormData(prev => ({
                           ...prev,
@@ -888,7 +900,7 @@ export function WorkPermit() {
                       <Label htmlFor="agentPhone">Agent Phone</Label>
                       <Input
                         id="agentPhone"
-                        placeholder="+960 777 1111"
+                        placeholder="+960 777 1234"
                         value={createFormData.agentPhone}
                         onChange={(e) => setCreateFormData(prev => ({
                           ...prev,
@@ -902,7 +914,7 @@ export function WorkPermit() {
                     <Label htmlFor="notes">Notes</Label>
                     <Textarea
                       id="notes"
-                      placeholder="Additional notes..."
+                      placeholder="Additional notes about this work permit application..."
                       value={createFormData.notes}
                       onChange={(e) => setCreateFormData(prev => ({
                         ...prev,
@@ -914,17 +926,10 @@ export function WorkPermit() {
               </Tabs>
               
               <DialogFooter>
-                <Button 
-                  variant="outline" 
-                  onClick={() => setIsCreateDialogOpen(false)}
-                  disabled={isLoading}
-                >
+                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                   Cancel
                 </Button>
-                <Button 
-                  onClick={handleCreateRecord}
-                  disabled={isLoading}
-                >
+                <Button onClick={handleCreateRecord} disabled={isLoading}>
                   {isLoading ? (
                     <>
                       <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
@@ -932,7 +937,7 @@ export function WorkPermit() {
                     </>
                   ) : (
                     <>
-                      <Plus className="h-4 w-4 mr-2" />
+                      <UserPlus className="h-4 w-4 mr-2" />
                       Create Record
                     </>
                   )}
@@ -943,33 +948,73 @@ export function WorkPermit() {
         </div>
       </div>
 
-      {/* Status Overview Cards */}
-      <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
-        {Object.entries(statusConfig).map(([status, config]) => {
-          const count = statusCounts[status as WorkPermitStatus]
-          const IconComponent = config.icon
-          
-          return (
-            <Card 
-              key={status} 
-              className={`cursor-pointer transition-all hover:shadow-md ${
-                statusFilter === status ? 'ring-2 ring-primary' : ''
-              }`}
-              onClick={() => setStatusFilter(statusFilter === status ? 'all' : status as WorkPermitStatus)}
-            >
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{config.label}</CardTitle>
-                <IconComponent className={`h-4 w-4 ${config.color}`} />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{count}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {config.description}
-                </p>
-              </CardContent>
-            </Card>
-          )
-        })}
+      {/* Summary Statistics - 6 Status Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Pending</CardTitle>
+            <Clock className="h-4 w-4 text-orange-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-orange-600">{statusCounts.pending}</div>
+            <p className="text-xs text-muted-foreground">Awaiting processing</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Expired</CardTitle>
+            <XCircle className="h-4 w-4 text-red-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">{statusCounts.expired}</div>
+            <p className="text-xs text-muted-foreground">Need renewal</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Expiring</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-yellow-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-yellow-600">{statusCounts.expiring}</div>
+            <p className="text-xs text-muted-foreground">Within 30 days</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Pending Payment</CardTitle>
+            <CreditCard className="h-4 w-4 text-blue-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">{statusCounts['pending-payment']}</div>
+            <p className="text-xs text-muted-foreground">Awaiting payment</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Collection Created</CardTitle>
+            <Receipt className="h-4 w-4 text-purple-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-purple-600">{statusCounts['collection-created']}</div>
+            <p className="text-xs text-muted-foreground">Ready for payment</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Paid/Completed</CardTitle>
+            <CheckCircle className="h-4 w-4 text-green-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">{statusCounts['paid-completed']}</div>
+            <p className="text-xs text-muted-foreground">Process complete</p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Filters */}
@@ -980,12 +1025,27 @@ export function WorkPermit() {
               <div className="relative flex-1 max-w-sm">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search records..."
+                  placeholder="Search work permits..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
                 />
               </div>
+              
+              <Select value={statusFilter} onValueChange={(value: any) => setStatusFilter(value)}>
+                <SelectTrigger className="w-48">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="expired">Expired</SelectItem>
+                  <SelectItem value="expiring">Expiring</SelectItem>
+                  <SelectItem value="pending-payment">Pending Payment</SelectItem>
+                  <SelectItem value="collection-created">Collection Created</SelectItem>
+                  <SelectItem value="paid-completed">Paid/Completed</SelectItem>
+                </SelectContent>
+              </Select>
               
               <Select value={permitTypeFilter} onValueChange={(value: any) => setPermitTypeFilter(value)}>
                 <SelectTrigger className="w-40">
@@ -1001,157 +1061,143 @@ export function WorkPermit() {
               </Select>
             </div>
             
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-sm">
-                {filteredRecords.length} records
-              </Badge>
-            </div>
+            <Badge variant="outline" className="text-sm">
+              {filteredRecords.length} records
+            </Badge>
           </div>
         </CardContent>
       </Card>
 
-      {/* Records Table */}
+      {/* Work Permit Records Table */}
       <Card>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Employee</TableHead>
-                  <TableHead>Permit Details</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Application Date</TableHead>
-                  <TableHead>Expiry Date</TableHead>
-                  <TableHead>Total Amount</TableHead>
-                  <TableHead className="w-16"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredRecords.map((record) => (
-                  <TableRow key={record.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-10 w-10">
-                          <AvatarFallback className="bg-primary/10 text-primary">
-                            {record.employeeName.split(' ').map(n => n[0]).join('')}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <div className="font-medium">{record.employeeName}</div>
-                          <div className="text-sm text-muted-foreground">
-                            {record.empId} • {record.passportNumber}
-                          </div>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Employee</TableHead>
+                <TableHead>Permit Details</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Fees & Collection</TableHead>
+                <TableHead>Dates</TableHead>
+                <TableHead>Last Updated</TableHead>
+                <TableHead className="w-16"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredRecords.map((record) => (
+                <TableRow key={record.id}>
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback className="bg-primary/10 text-primary">
+                          {record.employeeName.split(' ').map(n => n[0]).join('')}
+                        </AvatarFallback>
+                      </Avatar>
                       <div>
-                        <div className="font-medium capitalize">{record.permitType}</div>
+                        <div className="font-medium">{record.employeeName}</div>
                         <div className="text-sm text-muted-foreground">
-                          {record.permitNumber || 'Pending'}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {record.trackingNumber}
+                          {record.empId} • {record.nationality}
                         </div>
                       </div>
-                    </TableCell>
-                    <TableCell>{getStatusBadge(record.status)}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1 text-sm">
-                        <CalendarIcon className="h-3 w-3 text-muted-foreground" />
-                        {formatDate(record.applicationDate)}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div>
+                      <div className="font-medium capitalize">
+                        {record.permitType} Work Permit
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1 text-sm">
-                        <CalendarIcon className="h-3 w-3 text-muted-foreground" />
-                        {formatDate(record.expiryDate)}
+                      <div className="text-sm text-muted-foreground">
+                        {record.permitNumber || 'Pending'}
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <DollarSign className="h-3 w-3 text-muted-foreground" />
-                        <span className="font-medium">
-                          MVR {record.totalAmount.toLocaleString()}
-                        </span>
+                      <div className="text-xs text-muted-foreground">
+                        {record.trackingNumber}
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {getStatusBadge(record.status)}
+                  </TableCell>
+                  <TableCell>
+                    <div>
+                      <div className="font-medium">
+                        MVR {record.totalAmount.toLocaleString()}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        Collection: MVR {record.monthlyCollectionAmount} × {record.collectionMonths}m
+                      </div>
+                      {record.collectionCreatedDate && (
+                        <div className="text-xs text-green-600">
+                          Collection created
+                        </div>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-sm">
+                    <div>
+                      <div>Applied: {formatDate(record.applicationDate)}</div>
+                      {record.expiryDate && (
+                        <div className={`${
+                          record.status === 'expiring' 
+                            ? 'text-yellow-600 font-medium' 
+                            : record.status === 'expired'
+                            ? 'text-red-600 font-medium'
+                            : ''
+                        }`}>
+                          Expires: {formatDate(record.expiryDate)}
+                        </div>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-sm">
+                    <div>
+                      <div>{formatDate(record.updatedAt)}</div>
+                      <div className="text-muted-foreground">
+                        by {record.createdBy}
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => {
+                          setSelectedRecord(record)
+                        }}>
+                          <Eye className="h-4 w-4 mr-2" />
+                          View Details
+                        </DropdownMenuItem>
+                        {record.status === 'pending-payment' && !record.collectionCreatedDate && (
                           <DropdownMenuItem onClick={() => {
                             setSelectedRecord(record)
-                            setIsEditDialogOpen(true)
+                            setIsCollectionDialogOpen(true)
                           }}>
-                            <Eye className="h-4 w-4 mr-2" />
-                            View Details
+                            <Receipt className="h-4 w-4 mr-2" />
+                            Create Collection
                           </DropdownMenuItem>
-                          
-                          {(record.status === 'pending-payment' || record.status === 'pending') && (
-                            <DropdownMenuItem onClick={() => {
-                              setSelectedRecord(record)
-                              setCollectionData(prev => ({
-                                ...prev,
-                                recordId: record.id,
-                                totalMonths: record.validityPeriod,
-                                totalAmount: 350 * record.validityPeriod
-                              }))
-                              setIsCollectionDialogOpen(true)
-                            }}>
-                              <Calculator className="h-4 w-4 mr-2" />
-                              Create Collection
-                            </DropdownMenuItem>
-                          )}
-                          
-                          <DropdownMenuSeparator />
-                          <DropdownMenuLabel>Update Status</DropdownMenuLabel>
-                          
-                          {statusConfig[record.status].canTransitionTo.map((newStatus) => {
-                            const StatusIcon = statusConfig[newStatus].icon
-                            return (
-                              <DropdownMenuItem 
-                                key={newStatus}
-                                onClick={() => handleStatusUpdate(record.id, newStatus)}
-                              >
-                                <StatusIcon className="h-4 w-4 mr-2" />
-                                {statusConfig[newStatus].label}
-                              </DropdownMenuItem>
-                            )
-                          })}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-          
-          {filteredRecords.length === 0 && (
-            <div className="text-center py-12">
-              <Shield className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-medium mb-2">No work permit records found</h3>
-              <p className="text-muted-foreground mb-4">
-                {searchQuery || statusFilter !== 'all' || permitTypeFilter !== 'all'
-                  ? "No records match your current filters."
-                  : "Get started by adding your first work permit record."}
-              </p>
-              {(!searchQuery && statusFilter === 'all' && permitTypeFilter === 'all') && (
-                <Button onClick={() => setIsCreateDialogOpen(true)}>
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Add Work Permit
-                </Button>
-              )}
-            </div>
-          )}
+                        )}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuLabel>Update Status</DropdownMenuLabel>
+                        {Object.entries(statusConfig).map(([status, config]) => (
+                          <DropdownMenuItem 
+                            key={status}
+                            onClick={() => handleStatusUpdate(record.id, status as WorkPermitStatus)}
+                            disabled={record.status === status}
+                          >
+                            <config.icon className="h-4 w-4 mr-2" />
+                            {config.label}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
 
@@ -1161,86 +1207,85 @@ export function WorkPermit() {
           <DialogHeader>
             <DialogTitle>Create Collection</DialogTitle>
             <DialogDescription>
-              Create a monthly collection for work permit: MVR 350 per month per person
+              Create collection for {selectedRecord?.employeeName} - {selectedRecord?.permitType} work permit
             </DialogDescription>
           </DialogHeader>
           
-          {selectedRecord && (
-            <div className="space-y-6">
-              <div className="p-4 bg-muted rounded-lg">
-                <div className="font-medium">{selectedRecord.employeeName}</div>
-                <div className="text-sm text-muted-foreground">
-                  {selectedRecord.empId} • {selectedRecord.permitType} Work Permit
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="monthlyAmount">Monthly Amount (MVR)</Label>
-                  <Input
-                    id="monthlyAmount"
-                    type="number"
-                    value={collectionData.monthlyAmount}
-                    onChange={(e) => {
-                      const amount = parseInt(e.target.value) || 350
-                      updateCollectionTotal(collectionData.totalMonths, amount)
-                    }}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="totalMonths">Total Months</Label>
-                  <Input
-                    id="totalMonths"
-                    type="number"
-                    value={collectionData.totalMonths}
-                    onChange={(e) => {
-                      const months = parseInt(e.target.value) || 12
-                      updateCollectionTotal(months, collectionData.monthlyAmount)
-                    }}
-                  />
-                </div>
-              </div>
-              
-              <div className="p-4 bg-green-50 dark:bg-green-950/30 rounded-lg border border-green-200 dark:border-green-800">
-                <div className="flex justify-between items-center">
-                  <span className="font-medium text-green-800 dark:text-green-200">Total Collection Amount:</span>
-                  <span className="text-xl font-bold text-green-800 dark:text-green-200">
-                    MVR {collectionData.totalAmount.toLocaleString()}
-                  </span>
-                </div>
-                <div className="text-sm text-green-600 dark:text-green-400 mt-1">
-                  {collectionData.monthlyAmount} × {collectionData.totalMonths} months
-                </div>
-              </div>
-              
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="collectionNotes">Collection Notes</Label>
-                <Textarea
-                  id="collectionNotes"
-                  placeholder="Collection notes..."
-                  value={collectionData.notes}
-                  onChange={(e) => setCollectionData(prev => ({
-                    ...prev,
-                    notes: e.target.value
-                  }))}
+                <Label htmlFor="monthlyAmount">Monthly Amount (MVR)</Label>
+                <Input
+                  id="monthlyAmount"
+                  type="number"
+                  value={collectionData.monthlyAmount}
+                  onChange={(e) => {
+                    const amount = parseInt(e.target.value) || 350
+                    updateCollectionTotal(collectionData.totalMonths, amount)
+                  }}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="totalMonths">Total Months</Label>
+                <Input
+                  id="totalMonths"
+                  type="number"
+                  value={collectionData.totalMonths}
+                  onChange={(e) => {
+                    const months = parseInt(e.target.value) || 12
+                    updateCollectionTotal(months, collectionData.monthlyAmount)
+                  }}
                 />
               </div>
             </div>
-          )}
+
+            <div className="space-y-2">
+              <Label>Collection Summary</Label>
+              <div className="p-4 bg-muted rounded-lg">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <div className="font-medium">Monthly Collection:</div>
+                    <div>MVR {collectionData.monthlyAmount}</div>
+                  </div>
+                  <div>
+                    <div className="font-medium">Duration:</div>
+                    <div>{collectionData.totalMonths} months</div>
+                  </div>
+                  <div>
+                    <div className="font-medium">Start Date:</div>
+                    <div>{formatDate(collectionData.startDate)}</div>
+                  </div>
+                  <div>
+                    <div className="font-medium">End Date:</div>
+                    <div>{formatDate(collectionData.endDate)}</div>
+                  </div>
+                </div>
+                <Separator className="my-3" />
+                <div className="text-lg font-bold">
+                  Total Collection: MVR {collectionData.totalAmount.toLocaleString()}
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="collectionNotes">Notes</Label>
+              <Textarea 
+                id="collectionNotes" 
+                placeholder="Additional notes about this collection..."
+                value={collectionData.notes}
+                onChange={(e) => setCollectionData(prev => ({
+                  ...prev,
+                  notes: e.target.value
+                }))}
+              />
+            </div>
+          </div>
           
           <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={() => setIsCollectionDialogOpen(false)}
-              disabled={isLoading}
-            >
+            <Button variant="outline" onClick={() => setIsCollectionDialogOpen(false)}>
               Cancel
             </Button>
-            <Button 
-              onClick={handleCreateCollection}
-              disabled={isLoading}
-            >
+            <Button onClick={handleCreateCollection} disabled={isLoading}>
               {isLoading ? (
                 <>
                   <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
@@ -1248,229 +1293,12 @@ export function WorkPermit() {
                 </>
               ) : (
                 <>
-                  <Calculator className="h-4 w-4 mr-2" />
+                  <Receipt className="h-4 w-4 mr-2" />
                   Create Collection
                 </>
               )}
             </Button>
           </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Record Details Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Work Permit Details</DialogTitle>
-            <DialogDescription>
-              View and manage work permit record details
-            </DialogDescription>
-          </DialogHeader>
-          
-          {selectedRecord && (
-            <Tabs defaultValue="details" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="details">Details</TabsTrigger>
-                <TabsTrigger value="fees">Fees & Payment</TabsTrigger>
-                <TabsTrigger value="documents">Documents</TabsTrigger>
-                <TabsTrigger value="collection">Collection</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="details" className="space-y-4 mt-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-4">
-                    <div>
-                      <Label className="text-sm font-medium">Employee Information</Label>
-                      <div className="mt-1 p-3 bg-muted rounded-lg">
-                        <div className="font-medium">{selectedRecord.employeeName}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {selectedRecord.empId} • {selectedRecord.department}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {selectedRecord.passportNumber} • {selectedRecord.nationality}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <Label className="text-sm font-medium">Current Status</Label>
-                      <div className="mt-1">
-                        {getStatusBadge(selectedRecord.status)}
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <Label className="text-sm font-medium">Permit Type</Label>
-                      <div className="mt-1">
-                        <Badge variant="outline" className="capitalize">
-                          {selectedRecord.permitType}
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <Label className="text-sm font-medium">Permit Information</Label>
-                      <div className="mt-1 p-3 bg-muted rounded-lg">
-                        <div className="font-medium">{selectedRecord.permitNumber || 'Pending'}</div>
-                        <div className="text-sm text-muted-foreground">
-                          Tracking: {selectedRecord.trackingNumber}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          Ministry: {selectedRecord.ministry}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <Label className="text-sm font-medium">Validity Period</Label>
-                      <div className="mt-1">
-                        <span className="text-lg font-semibold">
-                          {selectedRecord.validityPeriod} months
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-sm font-medium">Application Date</Label>
-                    <div className="mt-1 p-2 bg-muted rounded">
-                      {formatDate(selectedRecord.applicationDate)}
-                    </div>
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium">Expiry Date</Label>
-                    <div className="mt-1 p-2 bg-muted rounded">
-                      {formatDate(selectedRecord.expiryDate)}
-                    </div>
-                  </div>
-                </div>
-                
-                {selectedRecord.notes && (
-                  <div>
-                    <Label className="text-sm font-medium">Notes</Label>
-                    <div className="mt-1 p-3 bg-muted rounded-lg">
-                      {selectedRecord.notes}
-                    </div>
-                  </div>
-                )}
-              </TabsContent>
-              
-              <TabsContent value="fees" className="space-y-4 mt-4">
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="p-3 bg-muted rounded-lg">
-                    <Label className="text-sm font-medium">Application Fee</Label>
-                    <div className="text-lg font-semibold">MVR {selectedRecord.applicationFee.toLocaleString()}</div>
-                  </div>
-                  <div className="p-3 bg-muted rounded-lg">
-                    <Label className="text-sm font-medium">Government Fee</Label>
-                    <div className="text-lg font-semibold">MVR {selectedRecord.governmentFee.toLocaleString()}</div>
-                  </div>
-                  <div className="p-3 bg-muted rounded-lg">
-                    <Label className="text-sm font-medium">Processing Fee</Label>
-                    <div className="text-lg font-semibold">MVR {selectedRecord.processingFee.toLocaleString()}</div>
-                  </div>
-                </div>
-                
-                <div className="p-4 bg-primary/10 rounded-lg border border-primary/20">
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium">Total Amount:</span>
-                    <span className="text-xl font-bold">MVR {selectedRecord.totalAmount.toLocaleString()}</span>
-                  </div>
-                </div>
-                
-                {selectedRecord.paymentDate && (
-                  <div>
-                    <Label className="text-sm font-medium">Payment Information</Label>
-                    <div className="mt-1 p-3 bg-green-50 dark:bg-green-950/30 rounded-lg">
-                      <div className="flex justify-between">
-                        <span>Payment Date:</span>
-                        <span className="font-medium">{formatDate(selectedRecord.paymentDate)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Payment Method:</span>
-                        <span className="font-medium capitalize">{selectedRecord.paymentMethod?.replace('-', ' ')}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Reference:</span>
-                        <span className="font-medium">{selectedRecord.paymentReference}</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </TabsContent>
-              
-              <TabsContent value="documents" className="space-y-4 mt-4">
-                <div className="grid grid-cols-2 gap-4">
-                  {Object.entries(selectedRecord.documents).map(([doc, uploaded]) => (
-                    <div key={doc} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div>
-                        <div className="font-medium capitalize">
-                          {doc.replace(/([A-Z])/g, ' $1').trim()}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {uploaded ? 'Document uploaded' : 'Document pending'}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {uploaded ? (
-                          <CheckCircle className="h-5 w-5 text-green-600" />
-                        ) : (
-                          <XCircle className="h-5 w-5 text-red-600" />
-                        )}
-                        <Button variant="outline" size="sm">
-                          <Upload className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="collection" className="space-y-4 mt-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-3 bg-muted rounded-lg">
-                    <Label className="text-sm font-medium">Monthly Collection Amount</Label>
-                    <div className="text-lg font-semibold">MVR {selectedRecord.monthlyCollectionAmount.toLocaleString()}</div>
-                  </div>
-                  <div className="p-3 bg-muted rounded-lg">
-                    <Label className="text-sm font-medium">Collection Months</Label>
-                    <div className="text-lg font-semibold">{selectedRecord.collectionMonths} months</div>
-                  </div>
-                </div>
-                
-                <div className="p-4 bg-purple-50 dark:bg-purple-950/30 rounded-lg border border-purple-200 dark:border-purple-800">
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium text-purple-800 dark:text-purple-200">Total Collection Amount:</span>
-                    <span className="text-xl font-bold text-purple-800 dark:text-purple-200">
-                      MVR {(selectedRecord.monthlyCollectionAmount * selectedRecord.collectionMonths).toLocaleString()}
-                    </span>
-                  </div>
-                </div>
-                
-                {selectedRecord.collectionCreatedDate && (
-                  <div>
-                    <Label className="text-sm font-medium">Collection Status</Label>
-                    <div className="mt-1 p-3 bg-muted rounded-lg">
-                      <div className="flex justify-between">
-                        <span>Collection Created:</span>
-                        <span className="font-medium">{formatDate(selectedRecord.collectionCreatedDate)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Status:</span>
-                        <Badge variant="outline" className="text-purple-600">
-                          Collection Active
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </TabsContent>
-            </Tabs>
-          )}
         </DialogContent>
       </Dialog>
     </div>
