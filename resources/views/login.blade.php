@@ -3,45 +3,45 @@
 @section('title', 'Login')
 
 @section('content')
-<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full space-y-8">
-        <div>
-            <svg class="mx-auto h-12 w-auto text-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/80 animate-fade-in-up py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8 bg-card/90 backdrop-blur-xl rounded-2xl shadow-xl border border-border p-8 animate-fade-in-up">
+        <div class="flex flex-col items-center space-y-2">
+            <svg class="mx-auto h-12 w-auto text-primary animate-float" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <path fill-rule="evenodd" d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 5a1 1 0 10-2 0v4H7a1 1 0 100 2h4v4a1 1 0 102 0v-4h4a1 1 0 100-2h-4V7z" clip-rule="evenodd" />
             </svg>
-            <h2 class="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">Sign in to your account</h2>
+            <h2 class="text-center text-3xl font-bold gradient-text-primary tracking-tight">Sign in to your account</h2>
         </div>
         <form class="mt-8 space-y-6" method="POST" action="{{ route('login.submit') }}">
             @csrf
             <input type="hidden" name="remember" value="true">
-            <div class="rounded-md shadow-sm -space-y-px">
+            <div class="space-y-4">
                 <div>
-                    <label for="email" class="sr-only">Email address</label>
-                    <input id="email" name="email" type="email" autocomplete="email" required value="{{ old('email') }}" class="relative block w-full appearance-none rounded-none rounded-t-md border border-gray-300 px-3 py-2 placeholder-gray-500 text-gray-900 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm" placeholder="Email address">
+                    <label for="email" class="block text-sm font-medium text-muted-foreground mb-1">Email address</label>
+                    <input id="email" name="email" type="email" autocomplete="email" required value="{{ old('email') }}" class="block w-full rounded-xl border border-border bg-input-background px-4 py-3 placeholder-muted-foreground text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 shadow-sm" placeholder="Email address">
                 </div>
-                <div class="-mt-px">
-                    <label for="password" class="sr-only">Password</label>
-                    <input id="password" name="password" type="password" autocomplete="current-password" required class="relative block w-full appearance-none rounded-none rounded-b-md border border-gray-300 px-3 py-2 placeholder-gray-500 text-gray-900 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm" placeholder="Password">
+                <div>
+                    <label for="password" class="block text-sm font-medium text-muted-foreground mb-1">Password</label>
+                    <input id="password" name="password" type="password" autocomplete="current-password" required class="block w-full rounded-xl border border-border bg-input-background px-4 py-3 placeholder-muted-foreground text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 shadow-sm" placeholder="Password">
                 </div>
             </div>
 
             @error('email')
-                <p class="text-red-500 text-sm">{{ $message }}</p>
+                <p class="text-destructive text-sm mt-2">{{ $message }}</p>
             @enderror
 
-            <div class="flex items-center justify-between">
+            <div class="flex items-center justify-between mt-4">
                 <div class="flex items-center">
-                    <input id="remember-me" name="remember" type="checkbox" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
-                    <label for="remember-me" class="ml-2 block text-sm text-gray-900">Remember me</label>
+                    <input id="remember-me" name="remember" type="checkbox" class="h-4 w-4 text-primary focus:ring-primary border-border rounded transition-all duration-200">
+                    <label for="remember-me" class="ml-2 block text-sm text-muted-foreground">Remember me</label>
                 </div>
 
                 <div class="text-sm">
-                    <a href="#" class="font-medium text-indigo-600 hover:text-indigo-500">Forgot your password?</a>
+                    <a href="#" class="font-medium text-primary hover:underline transition-colors">Forgot your password?</a>
                 </div>
             </div>
 
-            <div>
-                <button type="submit" class="group relative flex w-full justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+            <div class="mt-6">
+                <button type="submit" class="w-full px-4 py-3 rounded-xl btn-gradient text-white font-semibold shadow-md hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 animate-fade-in-up">
                     Sign in
                 </button>
             </div>
