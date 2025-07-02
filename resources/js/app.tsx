@@ -3,6 +3,16 @@ import Alpine from 'alpinejs';
 import intersect from '@alpinejs/intersect';
 import morph from '@alpinejs/morph';
 import persist from '@alpinejs/persist';
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import UserMenu from './components/UserMenu';
+
+declare global {
+    interface Window {
+        createLucideIcon?: any;
+        Alpine?: any;
+    }
+}
 
 // Register Alpine.js plugins
 Alpine.plugin(intersect);
@@ -258,3 +268,10 @@ window.createLucideIcon = function(iconName, className = 'w-6 h-6') {
 // Initialize Alpine
 window.Alpine = Alpine;
 Alpine.start();
+
+document.addEventListener('DOMContentLoaded', () => {
+    const rootEl = document.getElementById('user-menu-root');
+    if (rootEl) {
+        ReactDOM.createRoot(rootEl).render(<UserMenu />);
+    }
+});
