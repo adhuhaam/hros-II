@@ -1,4 +1,4 @@
-@import './../../styles/globals.css';
+@import './globals.css';
 
 /* Alpine.js transitions */
 [x-cloak] {
