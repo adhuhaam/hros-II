@@ -244,4 +244,7 @@
         </main>
     </div>
 </div>
+
+<div id="app-root"></div>
+@vite(['resources/js/app.tsx'])
 @endsection

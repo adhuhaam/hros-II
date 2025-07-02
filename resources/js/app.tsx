@@ -4,8 +4,17 @@ import intersect from '@alpinejs/intersect';
 import morph from '@alpinejs/morph';
 import persist from '@alpinejs/persist';
 import React from 'react';
-import ReactDOM from 'react-dom/client';
+import { createRoot } from 'react-dom/client';
 import UserMenu from './components/UserMenu';
+import Login from './components/Login';
+import Welcome from './components/Welcome';
+import Admin from './components/Admin';
+import Attendance from './components/Attendance';
+import Performance from './components/Performance';
+import Reports from './components/Reports';
+import Dashboard from './components/Dashboard';
+import Employees from './components/Employees';
+import Recruitment from './components/Recruitment';
 
 declare global {
     interface Window {
@@ -22,16 +31,16 @@ Alpine.plugin(persist);
 // Theme management
 Alpine.data('themeManager', () => ({
     theme: Alpine.$persist('light').as('hros-theme'),
-    
+
     init() {
         this.updateTheme();
     },
-    
+
     toggleTheme() {
         this.theme = this.theme === 'light' ? 'dark' : 'light';
         this.updateTheme();
     },
-    
+
     updateTheme() {
         if (this.theme === 'dark') {
             document.documentElement.classList.add('dark');
@@ -45,23 +54,23 @@ Alpine.data('themeManager', () => ({
 Alpine.data('navigation', () => ({
     currentPage: Alpine.$persist('welcome').as('hros-current-page'),
     isTransitioning: false,
-    
+
     navigateTo(page) {
         if (this.isTransitioning || this.currentPage === page) return;
-        
+
         this.isTransitioning = true;
-        
+
         // Simulate page transition
         setTimeout(() => {
             this.currentPage = page;
             window.history.pushState({}, '', `/${page === 'welcome' ? '' : page}`);
-            
+
             setTimeout(() => {
                 this.isTransitioning = false;
             }, 100);
         }, 250);
     },
-    
+
     init() {
         // Handle browser back/forward
         window.addEventListener('popstate', () => {
@@ -84,7 +93,7 @@ Alpine.data('welcomePage', () => ({
     showFab: false,
     mouseX: 0,
     mouseY: 0,
-    
+
     features: [
         {
             title: 'Team Management',
@@ -115,26 +124,26 @@ Alpine.data('welcomePage', () => ({
             icon: 'globe'
         }
     ],
-    
+
     achievements: [
         { label: 'Industry Leader', value: '#1', icon: 'award' },
         { label: 'Growth Rate', value: '300%', icon: 'trending-up' },
         { label: 'Uptime', value: '99.9%', icon: 'clock' },
         { label: 'Rating', value: '4.9/5', icon: 'star' }
     ],
-    
+
     init() {
         this.createParticles();
         this.startParticleAnimation();
         this.initMouseTracking();
         this.initScrollEvents();
-        
+
         // Auto-cycle features
         setInterval(() => {
             this.currentFeature = (this.currentFeature + 1) % this.features.length;
         }, 5000);
     },
-    
+
     createParticles() {
         this.particles = [];
         for (let i = 0; i < 50; i++) {
@@ -149,40 +158,40 @@ Alpine.data('welcomePage', () => ({
             });
         }
     },
-    
+
     startParticleAnimation() {
         setInterval(() => {
             this.particles = this.particles.map(particle => {
                 let newX = particle.x + particle.speedX;
                 let newY = particle.y + particle.speedY;
-                
+
                 if (newX > window.innerWidth) newX = 0;
                 if (newX < 0) newX = window.innerWidth;
                 if (newY > window.innerHeight) newY = 0;
                 if (newY < 0) newY = window.innerHeight;
-                
+
                 return { ...particle, x: newX, y: newY };
             });
         }, 50);
     },
-    
+
     initMouseTracking() {
         document.addEventListener('mousemove', (e) => {
             this.mouseX = e.clientX;
             this.mouseY = e.clientY;
         });
     },
-    
+
     initScrollEvents() {
         window.addEventListener('scroll', () => {
             this.showFab = window.scrollY > 300;
         });
     },
-    
+
     selectFeature(index) {
         this.currentFeature = index;
     },
-    
+
     scrollToTop() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -203,18 +212,18 @@ Alpine.data('dashboard', () => ({
         { status: 'Retired', count: 15, color: 'bg-purple-500', icon: 'user' },
         { status: 'Terminated', count: 608, color: 'bg-orange-500', icon: 'user-x' }
     ],
-    
+
     sidebarOpen: true,
     searchQuery: '',
-    
+
     toggleSidebar() {
         this.sidebarOpen = !this.sidebarOpen;
     },
-    
+
     logout() {
         this.$dispatch('logout');
     },
-    
+
     init() {
         // Initialize dashboard
         console.log('Dashboard initialized');
@@ -225,7 +234,7 @@ Alpine.data('dashboard', () => ({
 Alpine.data('mouseFollower', () => ({
     x: 0,
     y: 0,
-    
+
     init() {
         document.addEventListener('mousemove', (e) => {
             this.x = e.clientX - 12;
@@ -235,7 +244,7 @@ Alpine.data('mouseFollower', () => ({
 }));
 
 // Lucide icons helper
-window.createLucideIcon = function(iconName, className = 'w-6 h-6') {
+window.createLucideIcon = function (iconName, className = 'w-6 h-6') {
     const icons = {
         'users': `<svg class="${className}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a4 4 0 11-8 0 4 4 0 018 0z"/></svg>`,
         'shield': `<svg class="${className}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>`,
@@ -261,7 +270,7 @@ window.createLucideIcon = function(iconName, className = 'w-6 h-6') {
         'bell': `<svg class="${className}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>`,
         'log-out': `<svg class="${className}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>`
     };
-    
+
     return icons[iconName] || icons['user'];
 };
 
@@ -275,3 +284,29 @@ document.addEventListener('DOMContentLoaded', () => {
         ReactDOM.createRoot(rootEl).render(<UserMenu />);
     }
 });
+
+const root = document.getElementById('app-root');
+if (root) {
+    const path = window.location.pathname;
+    let Component: React.FC = () => <div>Page not found</div>;
+    if (path === '/login') {
+        Component = Login;
+    } else if (path === '/admin') {
+        Component = Admin;
+    } else if (path === '/attendance') {
+        Component = Attendance;
+    } else if (path === '/performance') {
+        Component = Performance;
+    } else if (path === '/reports') {
+        Component = Reports;
+    } else if (path === '/dashboard') {
+        Component = Dashboard;
+    } else if (path === '/employees') {
+        Component = Employees;
+    } else if (path === '/recruitment') {
+        Component = Recruitment;
+    } else if (path === '/' || path === '/welcome') {
+        Component = Welcome;
+    }
+    createRoot(root).render(<Component />);
+}

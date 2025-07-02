@@ -3,8 +3,6 @@
 @section('title', 'Reports')
 
 @section('content')
-<div class="p-6">
-    <h1 class="text-2xl">Reports Module</h1>
-    <p class="mt-4">Reporting features will appear here.</p>
-</div>
+<div id="app-root"></div>
+@vite(['resources/js/app.tsx'])
 @endsection
