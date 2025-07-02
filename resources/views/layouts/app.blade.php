@@ -27,66 +27,11 @@
     
     @stack('head')
 </head>
-<body class="antialiased"
-      x-data="{
-          themeManager: $store.themeManager,
-          navigation: $store.navigation
-      }"
-      x-init="
-          $store.themeManager = Alpine.store('themeManager', {
-              theme: Alpine.$persist('light').as('hros-theme'),
-              init() {
-                  this.updateTheme();
-              },
-              toggleTheme() {
-                  this.theme = this.theme === 'light' ? 'dark' : 'light';
-                  this.updateTheme();
-              },
-              updateTheme() {
-                  if (this.theme === 'dark') {
-                      document.documentElement.classList.add('dark');
-                  } else {
-                      document.documentElement.classList.remove('dark');
-                  }
-              }
-          });
-          
-          $store.navigation = Alpine.store('navigation', {
-              currentPage: Alpine.$persist('{{ $currentPage ?? 'welcome' }}').as('hros-current-page'),
-              isTransitioning: false,
-              
-              navigateTo(page) {
-                  if (this.isTransitioning || this.currentPage === page) return;
-                  
-                  this.isTransitioning = true;
-                  
-                  // Navigate using Laravel routes
-                  window.location.href = page === 'welcome' ? '/' : '/' + page;
-              }
-          });
-          
-          $store.themeManager.init();
-      "
-      :class="{ 'dark': $store.themeManager.theme === 'dark' }">
-
-    <!-- Mouse Follower -->
-    <div x-data="mouseFollower" 
-         class="fixed pointer-events-none z-50 w-6 h-6 rounded-full bg-primary/20 blur-sm transition-all duration-300"
-         :style="`transform: translate(${x}px, ${y}px)`"
-         x-cloak></div>
-
+<body class="antialiased">
     <!-- Main Content -->
     <main id="app" class="w-full min-h-screen">
         @yield('content')
     </main>
-
-    <!-- Scripts -->
     @stack('scripts')
-    
-    <!-- Alpine.js Event Listeners -->
-    <div x-data 
-         @login-success.window="$store.navigation.navigateTo('dashboard')"
-         @logout.window="$store.navigation.navigateTo('welcome')"
-         x-cloak></div>
 </body>
 </html>

@@ -1,10 +1,9 @@
 import './bootstrap';
-import Alpine from 'alpinejs';
-import intersect from '@alpinejs/intersect';
-import morph from '@alpinejs/morph';
-import persist from '@alpinejs/persist';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { ThemeProvider } from './components/ThemeContext';
+import { NavigationProvider } from './components/NavigationContext';
 import UserMenu from './components/UserMenu';
 import Login from './components/Login';
 import Welcome from './components/Welcome';
@@ -24,229 +23,8 @@ import RecruitmentCreate from './components/RecruitmentCreate';
 declare global {
     interface Window {
         createLucideIcon?: any;
-        Alpine?: any;
     }
 }
-
-// Register Alpine.js plugins
-Alpine.plugin(intersect);
-Alpine.plugin(morph);
-Alpine.plugin(persist);
-
-// Theme management
-Alpine.data('themeManager', () => ({
-    theme: Alpine.$persist('light').as('hros-theme'),
-
-    init() {
-        this.updateTheme();
-    },
-
-    toggleTheme() {
-        this.theme = this.theme === 'light' ? 'dark' : 'light';
-        this.updateTheme();
-    },
-
-    updateTheme() {
-        if (this.theme === 'dark') {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-        }
-    }
-}));
-
-// Navigation management
-Alpine.data('navigation', () => ({
-    currentPage: Alpine.$persist('welcome').as('hros-current-page'),
-    isTransitioning: false,
-
-    navigateTo(page) {
-        if (this.isTransitioning || this.currentPage === page) return;
-
-        this.isTransitioning = true;
-
-        // Simulate page transition
-        setTimeout(() => {
-            this.currentPage = page;
-            window.history.pushState({}, '', `/${page === 'welcome' ? '' : page}`);
-
-            setTimeout(() => {
-                this.isTransitioning = false;
-            }, 100);
-        }, 250);
-    },
-
-    init() {
-        // Handle browser back/forward
-        window.addEventListener('popstate', () => {
-            const path = window.location.pathname;
-            if (path === '/') {
-                this.currentPage = 'welcome';
-            } else if (path === '/login') {
-                this.currentPage = 'login';
-            } else if (path === '/dashboard') {
-                this.currentPage = 'dashboard';
-            }
-        });
-    }
-}));
-
-// Welcome page functionality
-Alpine.data('welcomePage', () => ({
-    currentFeature: 0,
-    particles: [],
-    showFab: false,
-    mouseX: 0,
-    mouseY: 0,
-
-    features: [
-        {
-            title: 'Team Management',
-            description: 'Streamline your workforce with advanced team management tools',
-            color: 'from-blue-500 to-purple-600',
-            stats: '10K+ Teams',
-            icon: 'users'
-        },
-        {
-            title: 'Secure Platform',
-            description: 'Enterprise-grade security to protect your sensitive HR data',
-            color: 'from-green-500 to-teal-600',
-            stats: '99.9% Secure',
-            icon: 'shield'
-        },
-        {
-            title: 'Lightning Fast',
-            description: 'Quick access to all your HR needs with our optimized platform',
-            color: 'from-yellow-500 to-orange-600',
-            stats: '< 2s Load Time',
-            icon: 'zap'
-        },
-        {
-            title: 'Global Reach',
-            description: 'Connect teams worldwide with our international platform',
-            color: 'from-indigo-500 to-blue-600',
-            stats: '180+ Countries',
-            icon: 'globe'
-        }
-    ],
-
-    achievements: [
-        { label: 'Industry Leader', value: '#1', icon: 'award' },
-        { label: 'Growth Rate', value: '300%', icon: 'trending-up' },
-        { label: 'Uptime', value: '99.9%', icon: 'clock' },
-        { label: 'Rating', value: '4.9/5', icon: 'star' }
-    ],
-
-    init() {
-        this.createParticles();
-        this.startParticleAnimation();
-        this.initMouseTracking();
-        this.initScrollEvents();
-
-        // Auto-cycle features
-        setInterval(() => {
-            this.currentFeature = (this.currentFeature + 1) % this.features.length;
-        }, 5000);
-    },
-
-    createParticles() {
-        this.particles = [];
-        for (let i = 0; i < 50; i++) {
-            this.particles.push({
-                id: i,
-                x: Math.random() * window.innerWidth,
-                y: Math.random() * window.innerHeight,
-                size: Math.random() * 4 + 1,
-                speedX: (Math.random() - 0.5) * 2,
-                speedY: (Math.random() - 0.5) * 2,
-                opacity: Math.random() * 0.5 + 0.1
-            });
-        }
-    },
-
-    startParticleAnimation() {
-        setInterval(() => {
-            this.particles = this.particles.map(particle => {
-                let newX = particle.x + particle.speedX;
-                let newY = particle.y + particle.speedY;
-
-                if (newX > window.innerWidth) newX = 0;
-                if (newX < 0) newX = window.innerWidth;
-                if (newY > window.innerHeight) newY = 0;
-                if (newY < 0) newY = window.innerHeight;
-
-                return { ...particle, x: newX, y: newY };
-            });
-        }, 50);
-    },
-
-    initMouseTracking() {
-        document.addEventListener('mousemove', (e) => {
-            this.mouseX = e.clientX;
-            this.mouseY = e.clientY;
-        });
-    },
-
-    initScrollEvents() {
-        window.addEventListener('scroll', () => {
-            this.showFab = window.scrollY > 300;
-        });
-    },
-
-    selectFeature(index) {
-        this.currentFeature = index;
-    },
-
-    scrollToTop() {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-}));
-
-// Simple login form
-Alpine.data('loginPage', () => ({
-    submitting: false,
-}));
-
-// Dashboard functionality
-Alpine.data('dashboard', () => ({
-    employeeStats: [
-        { status: 'Active', count: 1315, color: 'bg-green-500', icon: 'user-check' },
-        { status: 'Dead', count: 3, color: 'bg-red-500', icon: 'user-x' },
-        { status: 'Missing', count: 33, color: 'bg-yellow-500', icon: 'user-minus' },
-        { status: 'Resigned', count: 1354, color: 'bg-blue-500', icon: 'user-minus' },
-        { status: 'Retired', count: 15, color: 'bg-purple-500', icon: 'user' },
-        { status: 'Terminated', count: 608, color: 'bg-orange-500', icon: 'user-x' }
-    ],
-
-    sidebarOpen: true,
-    searchQuery: '',
-
-    toggleSidebar() {
-        this.sidebarOpen = !this.sidebarOpen;
-    },
-
-    logout() {
-        this.$dispatch('logout');
-    },
-
-    init() {
-        // Initialize dashboard
-        console.log('Dashboard initialized');
-    }
-}));
-
-// Mouse follower component
-Alpine.data('mouseFollower', () => ({
-    x: 0,
-    y: 0,
-
-    init() {
-        document.addEventListener('mousemove', (e) => {
-            this.x = e.clientX - 12;
-            this.y = e.clientY - 12;
-        });
-    }
-}));
 
 // Lucide icons helper
 window.createLucideIcon = function (iconName, className = 'w-6 h-6') {
@@ -275,53 +53,42 @@ window.createLucideIcon = function (iconName, className = 'w-6 h-6') {
         'bell': `<svg class="${className}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>`,
         'log-out': `<svg class="${className}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>`
     };
-
     return icons[iconName] || icons['user'];
 };
-
-// Initialize Alpine
-window.Alpine = Alpine;
-Alpine.start();
 
 document.addEventListener('DOMContentLoaded', () => {
     const rootEl = document.getElementById('user-menu-root');
     if (rootEl) {
-        ReactDOM.createRoot(rootEl).render(<UserMenu />);
+        createRoot(rootEl).render(<UserMenu />);
     }
 });
 
 const root = document.getElementById('app-root');
 if (root) {
-    const path = window.location.pathname;
-    let Component: React.FC = () => <div>Page not found</div>;
-    if (path === '/login') {
-        Component = Login;
-    } else if (path === '/admin') {
-        Component = Admin;
-    } else if (path === '/attendance') {
-        Component = Attendance;
-    } else if (path === '/performance') {
-        Component = Performance;
-    } else if (path === '/reports') {
-        Component = Reports;
-    } else if (path === '/dashboard') {
-        Component = Dashboard;
-    } else if (path === '/employees') {
-        Component = Employees;
-    } else if (path === '/employees/index') {
-        Component = EmployeesIndex;
-    } else if (path === '/employees/create') {
-        Component = EmployeesCreate;
-    } else if (path.startsWith('/employees/edit')) {
-        Component = EmployeesEdit;
-    } else if (path === '/recruitment') {
-        Component = Recruitment;
-    } else if (path === '/recruitment/index') {
-        Component = RecruitmentIndex;
-    } else if (path === '/recruitment/create') {
-        Component = RecruitmentCreate;
-    } else if (path === '/' || path === '/welcome') {
-        Component = Welcome;
-    }
-    createRoot(root).render(<Component />);
+    createRoot(root).render(
+        <ThemeProvider>
+            <BrowserRouter>
+                <NavigationProvider>
+                    <Routes>
+                        <Route path="/" element={<Welcome />} />
+                        <Route path="/welcome" element={<Welcome />} />
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/admin" element={<Admin />} />
+                        <Route path="/attendance" element={<Attendance />} />
+                        <Route path="/performance" element={<Performance />} />
+                        <Route path="/reports" element={<Reports />} />
+                        <Route path="/dashboard" element={<Dashboard />} />
+                        <Route path="/employees" element={<Employees />} />
+                        <Route path="/employees/index" element={<EmployeesIndex />} />
+                        <Route path="/employees/create" element={<EmployeesCreate />} />
+                        <Route path="/employees/edit/:id" element={<EmployeesEdit />} />
+                        <Route path="/recruitment" element={<Recruitment />} />
+                        <Route path="/recruitment/index" element={<RecruitmentIndex />} />
+                        <Route path="/recruitment/create" element={<RecruitmentCreate />} />
+                        <Route path="*" element={<div>Page not found</div>} />
+                    </Routes>
+                </NavigationProvider>
+            </BrowserRouter>
+        </ThemeProvider>
+    );
 }

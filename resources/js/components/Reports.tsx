@@ -1,11 +1,14 @@
 import React from 'react';
+import Layout from './Layout';
 
 const Reports: React.FC = () => {
     return (
-        <div className="p-6">
-            <h1 className="text-2xl">Reports Module</h1>
-            <p className="mt-4">Reporting features will appear here.</p>
-        </div>
+        <Layout>
+            <div>
+                <h1 className="text-2xl font-bold mb-4">Reports Module</h1>
+                <p>Reporting features will appear here.</p>
+            </div>
+        </Layout>
     );
 };
 

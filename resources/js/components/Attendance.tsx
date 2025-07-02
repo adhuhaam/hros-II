@@ -1,11 +1,14 @@
 import React from 'react';
+import Layout from './Layout';
 
 const Attendance: React.FC = () => {
     return (
-        <div className="p-6">
-            <h1 className="text-2xl">Attendance Module</h1>
-            <p className="mt-4">This section will handle attendance tracking.</p>
-        </div>
+        <Layout>
+            <div>
+                <h1 className="text-2xl font-bold mb-4">Attendance Module</h1>
+                <p>Attendance tracking will be implemented here.</p>
+            </div>
+        </Layout>
     );
 };
 

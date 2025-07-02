@@ -19,7 +19,6 @@ export default defineConfig({
         rollupOptions: {
             output: {
                 manualChunks: {
-                    alpine: ['alpinejs'],
                     lucide: ['lucide']
                 }
             }
