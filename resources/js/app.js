@@ -178,79 +178,9 @@ Alpine.data('welcomePage', () => ({
     }
 }));
 
-// Login page functionality
+// Simple login form
 Alpine.data('loginPage', () => ({
-    loginMethod: 'password',
-    formData: {
-        username: '',
-        password: ''
-    },
-    isLoading: false,
-    showPassword: false,
-    errors: {},
-    
-    setLoginMethod(method) {
-        this.loginMethod = method;
-        this.errors = {};
-    },
-    
-    togglePasswordVisibility() {
-        this.showPassword = !this.showPassword;
-    },
-    
-    async submitLogin() {
-        this.isLoading = true;
-        this.errors = {};
-        
-        // Basic validation
-        if (!this.formData.username) {
-            this.errors.username = 'Username is required';
-        }
-        if (!this.formData.password && this.loginMethod === 'password') {
-            this.errors.password = 'Password is required';
-        }
-        
-        if (Object.keys(this.errors).length > 0) {
-            this.isLoading = false;
-            return;
-        }
-        
-        try {
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            
-            // Mock successful login
-            if (this.formData.username === 'admin' && this.formData.password === 'password') {
-                this.$dispatch('login-success');
-            } else {
-                this.errors.general = 'Invalid credentials';
-            }
-        } catch (error) {
-            this.errors.general = 'Login failed. Please try again.';
-        } finally {
-            this.isLoading = false;
-        }
-    },
-    
-    handleBiometricLogin() {
-        this.isLoading = true;
-        
-        // Simulate biometric authentication
-        setTimeout(() => {
-            this.isLoading = false;
-            this.$dispatch('login-success');
-        }, 3000);
-    },
-    
-    handleSSOLogin() {
-        this.isLoading = true;
-        
-        // Simulate SSO authentication
-        setTimeout(() => {
-            this.isLoading = false;
-            this.$dispatch('login-success');
-        }, 2000);
-    }
+    submitting: false,
 }));
 
 // Dashboard functionality
