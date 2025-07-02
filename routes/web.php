@@ -40,7 +40,6 @@ Route::middleware(['auth'])->group(function () {
 
     // Recruitment management
     Route::resource('recruitment', RecruitmentController::class)->except(['show', 'edit', 'update']);
-=======
     Route::get('/admin', function () {
         return view('admin', ['currentPage' => 'admin']);
     })->middleware('role:admin')->name('admin');
