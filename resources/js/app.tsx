@@ -14,7 +14,12 @@ import Performance from './components/Performance';
 import Reports from './components/Reports';
 import Dashboard from './components/Dashboard';
 import Employees from './components/Employees';
+import EmployeesIndex from './components/EmployeesIndex';
+import EmployeesCreate from './components/EmployeesCreate';
+import EmployeesEdit from './components/EmployeesEdit';
 import Recruitment from './components/Recruitment';
+import RecruitmentIndex from './components/RecruitmentIndex';
+import RecruitmentCreate from './components/RecruitmentCreate';
 
 declare global {
     interface Window {
@@ -303,8 +308,18 @@ if (root) {
         Component = Dashboard;
     } else if (path === '/employees') {
         Component = Employees;
+    } else if (path === '/employees/index') {
+        Component = EmployeesIndex;
+    } else if (path === '/employees/create') {
+        Component = EmployeesCreate;
+    } else if (path.startsWith('/employees/edit')) {
+        Component = EmployeesEdit;
     } else if (path === '/recruitment') {
         Component = Recruitment;
+    } else if (path === '/recruitment/index') {
+        Component = RecruitmentIndex;
+    } else if (path === '/recruitment/create') {
+        Component = RecruitmentCreate;
     } else if (path === '/' || path === '/welcome') {
         Component = Welcome;
     }
