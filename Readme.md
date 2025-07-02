@@ -19,6 +19,8 @@
 
 The **HR Operations System (HRoS)** is a comprehensive HR management platform designed specifically for construction companies operating in the Maldives. The system handles complete employee lifecycle management, expatriate documentation, project site allocation, and island transfer operations.
 
+> **Update**: The application now includes a simplified landing page, a basic email/password login form and middleware based role-based access control. A default `admin` user is seeded for development.
+
 ### Key Objectives
 - Streamline HR operations for construction projects
 - Manage expatriate work permits and documentation
@@ -335,6 +337,10 @@ php artisan key:generate
 # Database setup
 php artisan migrate
 php artisan db:seed
+
+# A default admin user will be created:
+# Email: `test@example.com`
+# Password: `password`
 
 # Start Laravel server
 php artisan serve

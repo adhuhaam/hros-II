@@ -32,12 +32,13 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/attendance', [DashboardController::class, 'attendance'])->name('attendance');
     Route::get('/reports', [DashboardController::class, 'reports'])->name('reports');
     Route::get('/performance', [DashboardController::class, 'performance'])->name('performance');
+    Route::get('/admin', function () {
+        return view('admin', ['currentPage' => 'admin']);
+    })->middleware('role:admin')->name('admin');
 });
 
 // API Routes for AJAX calls
 Route::prefix('api')->group(function () {
-    Route::post('/auth/biometric', [AuthController::class, 'biometricAuth'])->name('api.auth.biometric');
-    Route::post('/auth/sso', [AuthController::class, 'ssoAuth'])->name('api.auth.sso');
     Route::get('/dashboard/stats', [DashboardController::class, 'getStats'])->name('api.dashboard.stats');
 });
 
